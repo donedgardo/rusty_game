@@ -24,8 +24,8 @@ impl PluginGroup for LoadTestPlugins {
     }
 }
 
-pub fn load_level_cycles(app: &mut App) {
-    for _ in 1..=3 {
+pub fn update(app: &mut App, cycles: usize) {
+    for _ in 1..=cycles {
         app.update();
     }
 }

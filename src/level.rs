@@ -32,7 +32,7 @@ impl Plugin for LevelPlugin {
 mod level_tests {
     use bevy::prelude::*;
     use crate::level::{Ground, LevelPlugin};
-    use crate::test_utils::{load_level_cycles, LoadTestPlugins};
+    use crate::test_utils::{update, LoadTestPlugins};
 
     #[test]
     fn did_spawn_test_level() {
@@ -40,7 +40,7 @@ mod level_tests {
         app
             .add_plugins(LoadTestPlugins)
             .add_plugin(LevelPlugin);
-        load_level_cycles(&mut app);
+        update(&mut app, 3);
         assert_eq!(app.world.query::<&Ground>().iter(&app.world).len(), 24 * 24);
     }
 }

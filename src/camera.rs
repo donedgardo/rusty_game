@@ -26,7 +26,7 @@ pub fn set_zoom(mut query: Query<&mut OrthographicProjection, Added<Camera>>) {
 #[cfg(test)]
 mod camera_test {
     use super::*;
-    use crate::test_utils::{load_level_cycles, LoadTestPlugins};
+    use crate::test_utils::{update, LoadTestPlugins};
 
     #[test]
     fn spawns_camera() {
@@ -34,7 +34,7 @@ mod camera_test {
         //app.add_startup_system(spawn_camera);
         app.add_plugins(LoadTestPlugins)
             .add_plugin(CameraPlugin);
-        load_level_cycles(&mut app);
+        update(&mut app, 3);
         assert_eq!(app.world.query::<&Camera>().iter(&app.world).len(), 1)
     }
 }

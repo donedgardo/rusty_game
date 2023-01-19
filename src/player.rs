@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
+use crate::input::Controllable;
 
 #[derive(Component, Default)]
 pub struct Player;
 
 #[derive(Bundle, LdtkEntity)]
-struct PlayerBundle {
-    player: Player,
+pub struct PlayerBundle {
+    pub player: Player,
     /// ### `#[sprite_sheet_bundle...]`
     /// Similar to `#[sprite_bundle...]`, indicates that a [SpriteSheetBundle] field should be created
     /// with an actual material/image.
@@ -19,6 +20,18 @@ struct PlayerBundle {
     #[bundle]
     #[sprite_sheet_bundle("dungeon/characters.png", 16.0, 32.0, 9, 8, 0.0, 0.0, 45)]
     pub sprite_sheet_bundle: SpriteSheetBundle,
+    #[bundle]
+    pub controller: Controllable,
+}
+
+impl Default for PlayerBundle {
+    fn default() -> Self {
+        Self {
+            player: Player::default(),
+            sprite_sheet_bundle: SpriteSheetBundle::default(),
+            controller: Controllable::default(),
+        }
+    }
 }
 
 pub struct PlayerPlugin;
@@ -60,7 +73,7 @@ mod player_tests {
             .add_plugins(LoadTestPlugins)
             .add_plugin(LevelPlugin)
             .add_plugin(PlayerPlugin);
-        test_utils::load_level_cycles(&mut app);
+        test_utils::update(&mut app, 3);
         assert_eq!(app.world.query::<&Player>().iter(&app.world).len(), 1)
     }
 
@@ -71,7 +84,7 @@ mod player_tests {
             .add_plugins(LoadTestPlugins)
             .add_plugin(LevelPlugin)
             .add_plugin(PlayerPlugin);
-        test_utils::load_level_cycles(&mut app);
+        test_utils::update(&mut app, 3);
         assert_eq!(app.world.query::<(&Player, &TextureAtlasSprite)>().iter(&app.world).len(), 1);
     }
 
@@ -83,9 +96,7 @@ mod player_tests {
             .add_plugin(LevelPlugin)
             .add_plugin(PlayerPlugin)
             .add_plugin(CameraPlugin);
-        test_utils::load_level_cycles(&mut app);
-        test_utils::load_level_cycles(&mut app);
-        test_utils::load_level_cycles(&mut app);
+        test_utils::update(&mut app, 9);
         assert_eq!(app.world.query_filtered::<&Parent, With<Camera>>()
                        .iter(&app.world).len(), 1);
         let mut player_query = app.world.query::<(&Camera, &Transform)>();
