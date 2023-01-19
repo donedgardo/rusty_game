@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use level::LevelPlugin;
 use player::PlayerPlugin;
+use crate::camera::CameraPlugin;
 
 mod level;
 mod camera;
@@ -12,7 +13,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(LevelPlugin)
         .add_plugin(PlayerPlugin)
-        .add_startup_system(camera::spawn_camera)
+        .add_plugin(CameraPlugin)
         .run();
 }
 
