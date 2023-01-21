@@ -1,6 +1,17 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
-use crate::input::Controllable;
+use bevy_rapier2d::prelude::Collider;
+use crate::input::PhysicsBundle;
+
+pub struct PlayerPlugin;
+
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .register_ldtk_entity::<PlayerBundle>("Player")
+            .add_system(camera_follow);
+    }
+}
 
 #[derive(Component, Default)]
 pub struct Player;
@@ -18,10 +29,11 @@ pub struct PlayerBundle {
     /// - `#[sprite_sheet_bundle]` will create the field using information from the LDtk Editor visual,
     /// if it has one.
     #[bundle]
-    #[sprite_sheet_bundle("dungeon/characters.png", 16.0, 32.0, 9, 8, 0.0, 0.0, 45)]
+    #[sprite_sheet_bundle("dungeon/wizzard.png", 16.0, 32.0, 9, 1, 0.0, 0.0, 0)]
     pub sprite_sheet_bundle: SpriteSheetBundle,
+    #[from_entity_instance]
     #[bundle]
-    pub controller: Controllable,
+    pub physics: PhysicsBundle,
 }
 
 impl Default for PlayerBundle {
@@ -29,12 +41,15 @@ impl Default for PlayerBundle {
         Self {
             player: Player::default(),
             sprite_sheet_bundle: SpriteSheetBundle::default(),
-            controller: Controllable::default(),
+            physics: PhysicsBundle {
+                collider: Collider::cuboid(8., 8.),
+                rigid_body: Default::default(),
+                velocity: Default::default(),
+                rotation_constraints: Default::default(),
+            },
         }
     }
 }
-
-pub struct PlayerPlugin;
 
 fn camera_follow(
     mut commands: Commands,
@@ -49,18 +64,10 @@ fn camera_follow(
     }
 }
 
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .register_ldtk_entity::<PlayerBundle>("Player")
-            .add_system(camera_follow);
-    }
-}
-
 #[cfg(test)]
 mod player_tests {
-    use bevy::prelude::*;
     use super::*;
+    use bevy_rapier2d::prelude::*;
     use crate::level::LevelPlugin;
     use crate::{test_utils};
     use crate::camera::CameraPlugin;
@@ -68,37 +75,30 @@ mod player_tests {
 
     #[test]
     fn player_spawns() {
-        let mut app = App::new();
-        app
-            .add_plugins(LoadTestPlugins)
-            .add_plugin(LevelPlugin)
-            .add_plugin(PlayerPlugin);
+        let mut app = setup();
         test_utils::update(&mut app, 3);
         assert_eq!(app.world.query::<&Player>().iter(&app.world).len(), 1)
     }
 
     #[test]
     fn player_has_sprite() {
-        let mut app = App::new();
-        app
-            .add_plugins(LoadTestPlugins)
-            .add_plugin(LevelPlugin)
-            .add_plugin(PlayerPlugin);
+        let mut app = setup();
         test_utils::update(&mut app, 3);
         assert_eq!(app.world.query::<(&Player, &TextureAtlasSprite)>().iter(&app.world).len(), 1);
     }
 
     #[test]
     fn player_has_camara_as_child() {
-        let mut app = App::new();
-        app
-            .add_plugins(LoadTestPlugins)
-            .add_plugin(LevelPlugin)
-            .add_plugin(PlayerPlugin)
-            .add_plugin(CameraPlugin);
+        let mut app = setup();
         test_utils::update(&mut app, 9);
         assert_eq!(app.world.query_filtered::<&Parent, With<Camera>>()
                        .iter(&app.world).len(), 1);
+    }
+
+    #[test]
+    fn camera_does_not_exceed_default_clipping() {
+        let mut app = setup();
+        test_utils::update(&mut app, 9);
         let mut player_query = app.world.query::<(&Camera, &Transform)>();
         let mut camera_query = app.world.query::<(&Player, &Transform)>();
         for (_, p_transform) in player_query.iter(&app.world) {
@@ -109,5 +109,32 @@ mod player_tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn has_a_collider() {
+        let mut app = setup();
+        test_utils::update(&mut app, 9);
+        let collider_count = app.world.query_filtered::<&Collider, With<Player>>()
+            .iter(&app.world).len();
+        assert_eq!(collider_count, 1);
+    }
+
+    #[test]
+    fn has_locked_rotation() {
+        let mut app = setup();
+        test_utils::update(&mut app, 9);
+        let rotation_constraint = app.world.query_filtered::<&LockedAxes, With<Player>>().single(&app.world);
+        assert_eq!(rotation_constraint, &LockedAxes::ROTATION_LOCKED);
+    }
+
+    fn setup() -> App {
+        let mut app = App::new();
+        app
+            .add_plugins(LoadTestPlugins)
+            .add_plugin(LevelPlugin)
+            .add_plugin(PlayerPlugin)
+            .add_plugin(CameraPlugin);
+        app
     }
 }

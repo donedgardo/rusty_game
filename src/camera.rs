@@ -31,7 +31,6 @@ mod camera_test {
     #[test]
     fn spawns_camera() {
         let mut app = App::new();
-        //app.add_startup_system(spawn_camera);
         app.add_plugins(LoadTestPlugins)
             .add_plugin(CameraPlugin);
         update(&mut app, 3);

@@ -3,6 +3,7 @@ use bevy_rapier2d::prelude::*;
 use level::LevelPlugin;
 use player::PlayerPlugin;
 use crate::camera::CameraPlugin;
+use crate::input::MyInputPlugin;
 
 mod level;
 mod camera;
@@ -17,7 +18,8 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(CameraPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_system(input::input_system)
+        .add_plugin(MyInputPlugin)
+        .add_plugin(RapierDebugRenderPlugin::default())
         .run();
 }
 
