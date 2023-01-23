@@ -48,27 +48,27 @@ fn movement_input(
     let mut velocity = velocity_res.unwrap();
     let mut direction = Vec2::default();
     let speed = 100.0;
-    handle_gamepad_input(axes, my_gamepad, &mut direction, speed);
-    handle_keyboard_input(keyboard_input, &mut direction, speed);
-    velocity.linvel = direction;
+    handle_gamepad_input(axes, my_gamepad, &mut direction);
+    handle_keyboard_input(keyboard_input, &mut direction);
+    velocity.linvel = direction.normalize_or_zero() * speed;
 }
 
-fn handle_keyboard_input(keyboard_input: Res<Input<KeyCode>>, direction: &mut Vec2, speed: f32) {
+fn handle_keyboard_input(keyboard_input: Res<Input<KeyCode>>, direction: &mut Vec2) {
     if keyboard_input.pressed(KeyCode::W) {
-        direction.y += speed;
+        direction.y += 1.0;
     }
     if keyboard_input.pressed(KeyCode::S) {
-        direction.y -= speed;
+        direction.y -= 1.0;
     }
     if keyboard_input.pressed(KeyCode::A) {
-        direction.x -= speed;
+        direction.x -= 1.0;
     }
     if keyboard_input.pressed(KeyCode::D) {
-        direction.x += speed;
+        direction.x += 1.0;
     }
 }
 
-fn handle_gamepad_input(axes: Res<Axis<GamepadAxis>>, my_gamepad: Option<Res<MyGamepad>>, direction: &mut Vec2, speed: f32) {
+fn handle_gamepad_input(axes: Res<Axis<GamepadAxis>>, my_gamepad: Option<Res<MyGamepad>>, direction: &mut Vec2) {
     if my_gamepad.is_none() { return; }
     let gamepad = my_gamepad.unwrap().0;
     let axis_lx = GamepadAxis {
@@ -80,17 +80,13 @@ fn handle_gamepad_input(axes: Res<Axis<GamepadAxis>>, my_gamepad: Option<Res<MyG
         axis_type: GamepadAxisType::LeftStickY,
     };
     if let Some(y) = axes.get(axis_ly) {
-        if y > 0.00 {
-            direction.y += speed;
-        } else if y < 0.00 {
-            direction.y -= speed;
+        if y != 0.00 {
+            direction.y = y;
         }
     }
     if let Some(x) = axes.get(axis_lx) {
-        if x > 0.00 {
-            direction.x += speed;
-        } else if x < 0.00 {
-            direction.x -= speed;
+        if x != 0.00 {
+            direction.x = x;
         }
     }
 }
@@ -100,7 +96,7 @@ pub struct PhysicsBundle {
     pub rigid_body: RigidBody,
     pub velocity: Velocity,
     pub collider: Collider,
-    pub rotation_constraints: LockedAxes
+    pub rotation_constraints: LockedAxes,
 }
 
 impl From<EntityInstance> for PhysicsBundle {
@@ -218,6 +214,17 @@ mod input_tests {
         test_utils::update(&mut app, 2);
         let new_transform = get_player_transform(&app, player_entity);
         assert!(new_transform.translation.x > 0.);
+    }
+
+    #[test]
+    fn gamepad_moves_player_at_an_angle() {
+        let (mut app, player_entity) = setup();
+        connect_test_gamepad(&mut app);
+        move_gamepad_left_axis(&mut app, 0.7, 0.7);
+        test_utils::update(&mut app, 3);
+        let velocity = app.world.get::<Velocity>(player_entity).unwrap();
+        assert_eq!(velocity.linvel.floor(),
+                   (Vec2::new(0.7, 0.7).normalize() * 100.).floor());
     }
 
     #[test]
