@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use bevy_ecs_ldtk::prelude::*;
-use bevy_rapier2d::prelude::{Collider, LockedAxes, RigidBody, Velocity};
+use bevy_rapier2d::prelude::Velocity;
 use crate::player::Player;
 
 pub struct MyInputPlugin;
@@ -11,6 +10,9 @@ impl Plugin for MyInputPlugin {
             .add_system(movement_input);
     }
 }
+
+#[derive(Resource)]
+pub struct MyGamepad(Gamepad);
 
 fn gamepad_detection(
     mut commands: Commands,
@@ -91,42 +93,7 @@ fn handle_gamepad_input(axes: Res<Axis<GamepadAxis>>, my_gamepad: Option<Res<MyG
     }
 }
 
-#[derive(Bundle)]
-pub struct PhysicsBundle {
-    pub rigid_body: RigidBody,
-    pub velocity: Velocity,
-    pub collider: Collider,
-    pub rotation_constraints: LockedAxes,
-}
 
-impl From<EntityInstance> for PhysicsBundle {
-    fn from(entity_instance: EntityInstance) -> PhysicsBundle {
-        let rotation_constraints = LockedAxes::ROTATION_LOCKED;
-        match entity_instance.identifier.as_ref() {
-            "Player" => PhysicsBundle {
-                collider: Collider::capsule_y(4., 7.),
-                rigid_body: RigidBody::Dynamic,
-                rotation_constraints,
-                ..Default::default()
-            },
-            _ => PhysicsBundle::default(),
-        }
-    }
-}
-
-impl Default for PhysicsBundle {
-    fn default() -> Self {
-        Self {
-            rotation_constraints: LockedAxes::ROTATION_LOCKED,
-            rigid_body: Default::default(),
-            velocity: Default::default(),
-            collider: Collider::default(),
-        }
-    }
-}
-
-#[derive(Resource)]
-pub struct MyGamepad(Gamepad);
 
 #[cfg(test)]
 mod input_tests {
@@ -248,7 +215,6 @@ mod input_tests {
         app.update();
         assert!(app.world.get_resource::<MyGamepad>().is_none());
     }
-
 
     fn setup() -> (App, Entity) {
         let mut app = App::new();

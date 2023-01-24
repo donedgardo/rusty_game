@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
-use bevy_rapier2d::prelude::Collider;
-use crate::input::PhysicsBundle;
+use crate::physics_bundle::PhysicsBundle;
 
 pub struct PlayerPlugin;
 
@@ -16,7 +15,7 @@ impl Plugin for PlayerPlugin {
 #[derive(Component, Default)]
 pub struct Player;
 
-#[derive(Bundle, LdtkEntity)]
+#[derive(Bundle, LdtkEntity, Default)]
 pub struct PlayerBundle {
     pub player: Player,
     /// ### `#[sprite_sheet_bundle...]`
@@ -34,21 +33,6 @@ pub struct PlayerBundle {
     #[from_entity_instance]
     #[bundle]
     pub physics: PhysicsBundle,
-}
-
-impl Default for PlayerBundle {
-    fn default() -> Self {
-        Self {
-            player: Player::default(),
-            sprite_sheet_bundle: SpriteSheetBundle::default(),
-            physics: PhysicsBundle {
-                collider: Collider::cuboid(8., 8.),
-                rigid_body: Default::default(),
-                velocity: Default::default(),
-                rotation_constraints: Default::default(),
-            },
-        }
-    }
 }
 
 fn camera_follow(
@@ -126,6 +110,14 @@ mod player_tests {
         test_utils::update(&mut app, 9);
         let rotation_constraint = app.world.query_filtered::<&LockedAxes, With<Player>>().single(&app.world);
         assert_eq!(rotation_constraint, &LockedAxes::ROTATION_LOCKED);
+    }
+
+    #[test]
+    fn has_zero_gravity() {
+        let mut app = setup();
+        test_utils::update(&mut app, 3);
+        let gravity = app.world.query_filtered::<&GravityScale, With<Player>>().single(&app.world);
+        assert_eq!(gravity.0, 0.);
     }
 
     fn setup() -> App {

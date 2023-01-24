@@ -12,6 +12,7 @@ mod test_utils;
 mod player;
 mod input;
 mod cursor_indicator;
+mod physics_bundle;
 
 fn main() {
     App::new()
