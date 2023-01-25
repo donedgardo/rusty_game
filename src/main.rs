@@ -1,3 +1,4 @@
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use level::LevelPlugin;
@@ -17,13 +18,15 @@ mod physics_bundle;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(LevelPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(CameraPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(MyInputPlugin)
         .add_plugin(CursorIndicatorPlugin)
-        //.add_plugin(RapierDebugRenderPlugin::default())
         .run();
 }
 
