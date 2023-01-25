@@ -171,6 +171,7 @@ jobs:
         uses: jsmrcaga/action-netlify-deploy@v2.0.0
         with:
             NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY }}
+            NETLIFY_SITE_ID: c8b3be60-1e1a-402d-98e6-0eacc4109fb4
             NETLIFY_DEPLOY_TO_PROD: true
             build_directory: dist/
             install_command: "echo Skipping installing the dependencies"
