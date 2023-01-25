@@ -153,6 +153,7 @@ jobs:
       - name: Add wasm target
         run: |
           rustup target add wasm32-unknown-unknown
+          cargo install --locked wasm-bindgen-cli
       - name: Build Release
         run: |
           trunk build --release
