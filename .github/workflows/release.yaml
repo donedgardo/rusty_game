@@ -168,7 +168,7 @@ jobs:
           sed -i 's/\/index/.\/index/g' dist/index.html
           sed -i 's/\/${{ env.GAME_EXECUTABLE_NAME }}/.\/${{ env.GAME_EXECUTABLE_NAME }}/g' dist/index.html
       - name: Deploy Netlify
-        uses: jsmrcaga/action-netlify-deploy@v1.1.0
+        uses: jsmrcaga/action-netlify-deploy@v2.0.0
         with:
             NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY }}
             NETLIFY_DEPLOY_TO_PROD: true
