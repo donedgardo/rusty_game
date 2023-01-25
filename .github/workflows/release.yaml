@@ -173,6 +173,8 @@ jobs:
             NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY }}
             NETLIFY_DEPLOY_TO_PROD: true
             build_directory: dist/
+            install_command: "echo Skipping installing the dependencies"
+            build_command: "echo Skipping building the web files"
       - name: Zip release
         uses: vimtor/action-zip@v1
         with:
