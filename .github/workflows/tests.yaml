@@ -1,0 +1,26 @@
+name: 'Test Runner'
+
+on: [ push ]
+
+# This allows a subsequently queued workflow run to interrupt previous runs
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: action/checkout@v3
+      - name: Cache cargo compilations
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-compiled-modules
+        with:
+          path: ./target
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+      - uses: actions-rs/toolchain@v1
+          - run:
+              cargo test

@@ -16,11 +16,8 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install rust toolchain for Apple Silicon
         uses: actions-rs/toolchain@v1
         with:
@@ -56,7 +53,7 @@ jobs:
         with:
           repo_token: ${{ secrets.UPLOAD_TOKEN }}
           file: ${{ env.GAME_EXECUTABLE_NAME }}.dmg
-          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}_macOS.dmg
+          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ github.ref }}_macOS.dmg
           tag: ${{ github.ref }}
           overwrite: true
 
@@ -64,11 +61,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -92,7 +86,7 @@ jobs:
         with:
           repo_token: ${{ secrets.UPLOAD_TOKEN }}
           file: ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz
-          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}_linux.tar.gz
+          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ github.ref_name }}_linux.tar.gz
           tag: ${{ github.ref }}
           overwrite: true
 
@@ -100,11 +94,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -126,7 +117,7 @@ jobs:
         with:
           repo_token: ${{ secrets.UPLOAD_TOKEN }}
           file: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
-          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}_windows.zip
+          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ github.ref_name }}_windows.zip
           tag: ${{ github.ref }}
           overwrite: true
 
@@ -134,11 +125,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -186,6 +174,6 @@ jobs:
         with:
           repo_token: ${{ secrets.UPLOAD_TOKEN }}
           file: ${{ env.GAME_EXECUTABLE_NAME }}_web.zip
-          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ steps.tag.outputs.tag }}_web.zip
+          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ github.ref_name }}_web.zip
           tag: ${{ github.ref }}
           overwrite: true
