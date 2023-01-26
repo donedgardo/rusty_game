@@ -1,23 +1,34 @@
-name: release-flow
+name: ci-cd-pipeline
 
 on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+*"
 
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
 env:
-  # heads-up: this value is used as a pattern in an sed command as a workaround for a trunk issue
-  #   if you use special characters, take a look at the 'Make paths relative' step in the 'build-web' job
   GAME_EXECUTABLE_NAME: onyx
   GAME_OSX_APP_NAME: Onyx
 
 jobs:
+
   build-macOS:
     runs-on: macos-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install rust toolchain for Apple Silicon
         uses: actions-rs/toolchain@v1
         with:
@@ -59,10 +70,18 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -92,10 +111,18 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -123,10 +150,18 @@ jobs:
 
   build-web:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -158,12 +193,12 @@ jobs:
       - name: Deploy Netlify
         uses: jsmrcaga/action-netlify-deploy@v2.0.0
         with:
-            NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY }}
-            NETLIFY_SITE_ID: c8b3be60-1e1a-402d-98e6-0eacc4109fb4
-            NETLIFY_DEPLOY_TO_PROD: true
-            build_directory: dist/
-            install_command: "echo Skipping installing the dependencies"
-            build_command: "echo Skipping building the web files"
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY }}
+          NETLIFY_SITE_ID: c8b3be60-1e1a-402d-98e6-0eacc4109fb4
+          NETLIFY_DEPLOY_TO_PROD: true
+          build_directory: dist/
+          install_command: "echo Skipping installing the dependencies"
+          build_command: "echo Skipping building the web files"
       - name: Zip release
         uses: vimtor/action-zip@v1
         with:
