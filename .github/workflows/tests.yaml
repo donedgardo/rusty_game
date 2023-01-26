@@ -21,4 +21,8 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
       - run: cargo test
