@@ -5,6 +5,7 @@ use level::LevelPlugin;
 use player::PlayerPlugin;
 use crate::camera::CameraPlugin;
 use crate::cursor_indicator::CursorIndicatorPlugin;
+use crate::game_logs::UIPlugin;
 use crate::input::MyInputPlugin;
 
 mod level;
@@ -14,6 +15,7 @@ mod player;
 mod input;
 mod cursor_indicator;
 mod physics_bundle;
+mod game_logs;
 
 fn main() {
     App::new()
@@ -27,7 +29,6 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(MyInputPlugin)
         .add_plugin(CursorIndicatorPlugin)
+        .add_plugin(UIPlugin)
         .run();
 }
-
-
