@@ -74,12 +74,11 @@ fn get_rotation_from_to(from: Vec2, to: Vec2) -> Quat {
 
 #[cfg(test)]
 mod indicator_cursor_test {
-    use bevy::math::DVec2;
     use super::*;
     use bevy::prelude::*;
     use crate::camera::CameraPlugin;
     use crate::player::{Player};
-    use crate::test_utils::{LoadTestPlugins, update};
+    use crate::test_utils::{create_test_windows, LoadTestPlugins, update};
 
     #[test]
     fn it_spawns_indicator_as_child_of_player() {
@@ -121,22 +120,4 @@ mod indicator_cursor_test {
         app
     }
 
-    fn create_test_windows() -> Windows {
-        let mut windows = Windows::default();
-        let mut test_window = Window::new(
-            Default::default(),
-            &Default::default(),
-            100,
-            100,
-            1.0,
-            None,
-            None,
-        );
-        test_window.update_cursor_physical_position_from_backend(
-            // position from bottom left of windows
-            Option::from(DVec2::new(0., 50.))
-        );
-        windows.add(test_window);
-        windows
-    }
 }
