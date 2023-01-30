@@ -11,6 +11,7 @@ impl Plugin for UIPlugin {
             .add_startup_system(setup_ui)
             .add_system(debug_event)
             .add_system(game_log_events)
+            .add_system(scroll_to_bottom)
             .add_system(mouse_scroll);
     }
 }
@@ -89,6 +90,22 @@ fn game_log_events(
     }
 }
 
+fn scroll_to_bottom(
+    q: Query<Entity, (With<GameLogs>, Changed<Node>)>,
+    mut query_list: Query<(&mut Style, &Node, &mut ScrollingList)>,
+    logs_q: Query<&Node, With<GameLogs>>,
+) {
+    for _ in q.iter() {
+        let logs_height: f32 = logs_q.iter()
+            .map(|node| node.size().y)
+            .sum();
+        let (mut style, node, mut scroll) = query_list.single_mut();
+        let panel_height = node.size().y;
+        scroll.position = panel_height - logs_height;
+        style.position.top = Val::Px(panel_height - logs_height);
+    }
+}
+
 fn mouse_scroll(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     mut query_list: Query<(&mut ScrollingList, &mut Style, &Children, &Node)>,
@@ -147,16 +164,55 @@ mod log_test {
     fn it_scrolls_on_mouse_scroll() {
         let mut app = setup();
         app.world.send_event(GameLogEvent("Hello World!Long LOng Long \n Long \n Long \n LOng\n very long! \n Very Long \n Very LOng \n Very Long".to_string()));
+        update(&mut app, 3);
+        let original_top = get_scroll_list_top(&mut app);
+        scroll_mouse(&mut app, 1.);
         update(&mut app, 2);
+        let top_after_mouse_scroll = get_scroll_list_top(&mut app);
+        let expected_top = original_top.try_add(Val::Px(20.)).unwrap();
+        assert_eq!(top_after_mouse_scroll, expected_top);
+        scroll_mouse(&mut app, -1.);
+        update(&mut app, 2);
+        let top_after_scrolling_back = get_scroll_list_top(&mut app);
+        assert_eq!(original_top, top_after_scrolling_back);
+    }
+
+    #[test]
+    fn it_scrolls_to_bottom_on_log_event() {
+        let mut app = setup();
+        app.world.send_event(GameLogEvent("Hello World!Long LOng Long \n Long \n Long \n LOng\n very long! \n Very Long \n Very LOng \n Very Long".to_string()));
+        app.world.send_event(GameLogEvent("Hello World!Long LOng Long \n Long \n Long \n LOng\n very long! \n Very Long \n Very LOng \n Very Long".to_string()));
+        update(&mut app, 3);
+        let item_height: f32 = get_logs_height(&mut app);
+        let (node, style, scroll) = app.world
+            .query::<(&Node, &Style, &ScrollingList)>()
+            .single(&app.world);
+        let panel_height = node.size().y;
+        let expected_top_value = item_height - panel_height;
+        assert_eq!(style.position.top, Val::Px(-expected_top_value));
+        assert_eq!(scroll.position, -expected_top_value);
+    }
+
+    fn get_logs_height(app: &mut App) -> f32 {
+        app.world.query_filtered::<&Node, With<GameLogs>>()
+            .iter(&app.world)
+            .map(|node| node.size().y)
+            .sum()
+    }
+
+    fn get_scroll_list_top(app: &mut App) -> Val {
+        app.world
+            .query_filtered::<&Style, With<ScrollingList>>().single(&app.world)
+            .position
+            .top
+    }
+
+    fn scroll_mouse(app: &mut App, y: f32) {
         app.world.send_event(MouseWheel {
             unit: MouseScrollUnit::Line,
             x: 0.0,
-            y: -1.,
+            y,
         });
-        update(&mut app, 1);
-        let scroll_list_style = app.world
-            .query_filtered::<&Style, With<ScrollingList>>().single(&app.world);
-        assert_eq!(scroll_list_style.position.top, Val::Px(-20.));
     }
 
     fn setup() -> App {
