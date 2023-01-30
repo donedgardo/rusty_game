@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::asset::AssetServer;
+use bevy::ecs::query::QueryIter;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 
 pub struct UIPlugin;
@@ -10,9 +11,9 @@ impl Plugin for UIPlugin {
             .add_event::<GameLogEvent>()
             .add_startup_system(setup_ui)
             .add_system(debug_event)
-            .add_system(game_log_events)
-            .add_system(scroll_to_bottom)
-            .add_system(mouse_scroll);
+            .add_system(add_game_logs)
+            .add_system(scroll_to_bottom_on_new_log)
+            .add_system(scroll_logs_on_mouse_scroll);
     }
 }
 
@@ -57,68 +58,67 @@ fn setup_ui(mut commands: Commands) {
 }
 
 
-fn game_log_events(
+fn add_game_logs(
     mut commands: Commands,
     mut log_event_reader: EventReader<GameLogEvent>,
     asset_server: Res<AssetServer>,
     list_query: Query<(Entity, &Node), With<ScrollingList>>,
 ) {
     for event in log_event_reader.iter() {
-        let log = event.0.clone() + "\n";
-        for (list, node) in list_query.iter() {
-            commands.entity(list).with_children(|parent| {
-                parent.spawn((
-                    TextBundle::from_section(
-                        log.to_string(),
-                        TextStyle {
-                            font: asset_server.load("fonts/kongtext/kongtext.ttf"),
-                            font_size: 12.0,
-                            color: Color::WHITE,
-                        },
-                    ).with_style(Style {
-                        flex_shrink: 0.,
-                        size: Size::new(
-                            Val::Px(node.size().x),
-                            Val::Undefined,
-                        ),
-                        ..default()
-                    }),
-                    GameLogs
-                ));
-            });
-        }
+        let log_text = event.0.clone() + "\n";
+        let list_query_result = list_query.get_single();
+        if list_query_result.is_err() { return; };
+        let (list, node) = list_query_result.unwrap();
+        commands.entity(list).with_children(|parent| {
+            parent.spawn((
+                TextBundle::from_section(
+                    log_text.to_string(),
+                    TextStyle {
+                        font: asset_server.load("fonts/kongtext/kongtext.ttf"),
+                        font_size: 12.0,
+                        color: Color::WHITE,
+                    },
+                ).with_style(Style {
+                    flex_shrink: 0.,
+                    size: Size::new(
+                        Val::Px(node.size().x),
+                        Val::Undefined,
+                    ),
+                    ..default()
+                }),
+                GameLog
+            ));
+        });
     }
 }
 
-fn scroll_to_bottom(
-    q: Query<Entity, (With<GameLogs>, Changed<Node>)>,
+fn scroll_to_bottom_on_new_log(
+    log_node_changed_query: Query<Entity, (With<GameLog>, Changed<Node>)>,
     mut query_list: Query<(&mut Style, &Node, &mut ScrollingList)>,
-    logs_q: Query<&Node, With<GameLogs>>,
+    logs_query: Query<&Node, With<GameLog>>,
 ) {
-    for _ in q.iter() {
-        let logs_height: f32 = logs_q.iter()
-            .map(|node| node.size().y)
-            .sum();
-        let (mut style, node, mut scroll) = query_list.single_mut();
+    for _ in log_node_changed_query.iter() {
+        let logs_height = get_game_logs_height(logs_query.iter());
+        let query_list_result = query_list.get_single_mut();
+        if query_list_result.is_err() { continue; }
+        let (mut style, node, mut scroll) = query_list_result.unwrap();
         let panel_height = node.size().y;
         scroll.position = panel_height - logs_height;
         style.position.top = Val::Px(panel_height - logs_height);
     }
 }
 
-fn mouse_scroll(
+
+fn scroll_logs_on_mouse_scroll(
     mut mouse_wheel_events: EventReader<MouseWheel>,
-    mut query_list: Query<(&mut ScrollingList, &mut Style, &Children, &Node)>,
-    query_item: Query<&Node>,
+    mut query_list: Query<(&mut ScrollingList, &mut Style, &Node)>,
+    logs_query: Query<&Node, With<GameLog>>,
 ) {
     for mouse_wheel_event in mouse_wheel_events.iter() {
-        for (mut scrolling_list, mut style, children, uinode) in &mut query_list {
-            let items_height: f32 = children
-                .iter()
-                .map(|entity| query_item.get(*entity).unwrap().size().y)
-                .sum();
+        for (mut scrolling_list, mut style, uinode) in &mut query_list {
+            let logs_height = get_game_logs_height(logs_query.iter());
             let panel_height = uinode.size().y;
-            let max_scroll = (items_height - panel_height).max(0.);
+            let max_scroll = (logs_height - panel_height).max(0.);
             let dy = match mouse_wheel_event.unit {
                 MouseScrollUnit::Line => mouse_wheel_event.y * 20.,
                 MouseScrollUnit::Pixel => mouse_wheel_event.y,
@@ -130,6 +130,13 @@ fn mouse_scroll(
     }
 }
 
+fn get_game_logs_height(logs_iter: QueryIter<&Node, With<GameLog>>) -> f32 {
+    let logs_height: f32 = logs_iter
+        .map(|node| node.size().y)
+        .sum();
+    logs_height
+}
+
 
 #[derive(Component, Default)]
 struct ScrollingList {
@@ -137,7 +144,7 @@ struct ScrollingList {
 }
 
 #[derive(Component)]
-struct GameLogs;
+struct GameLog;
 
 pub struct GameLogEvent(String);
 
@@ -147,8 +154,7 @@ mod log_test {
     use bevy::text::TextPlugin;
     use bevy::ui::UiPlugin;
     use super::*;
-    use crate::test_utils;
-    use crate::test_utils::update;
+    use crate::test_utils::*;
 
     #[test]
     fn it_updates_log_text() {
@@ -156,7 +162,7 @@ mod log_test {
         app.world.send_event(GameLogEvent("Hello World!".to_string()));
         app.update();
         let log_text = app.world
-            .query_filtered::<&Text, With<GameLogs>>().single(&app.world);
+            .query_filtered::<&Text, With<GameLog>>().single(&app.world);
         assert_eq!(log_text.sections[0].value, "Hello World!\n".to_string());
     }
 
@@ -194,7 +200,7 @@ mod log_test {
     }
 
     fn get_logs_height(app: &mut App) -> f32 {
-        app.world.query_filtered::<&Node, With<GameLogs>>()
+        app.world.query_filtered::<&Node, With<GameLog>>()
             .iter(&app.world)
             .map(|node| node.size().y)
             .sum()
@@ -216,9 +222,9 @@ mod log_test {
     }
 
     fn setup() -> App {
-        let windows = test_utils::create_test_windows();
+        let windows = create_test_windows();
         let mut app = App::new();
-        app.add_plugins(test_utils::LoadTestPlugins);
+        app.add_plugins(LoadTestPlugins);
         app.add_plugin(TextPlugin::default());
         app.add_plugin(UiPlugin::default());
         app.add_plugin(InputPlugin);

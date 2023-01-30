@@ -11,7 +11,7 @@
 	"iid": "9e040a00-7820-11ed-833f-8d73f8d6bf01",
 	"jsonVersion": "1.2.5",
 	"appBuildId": 464870,
-	"nextUid": 125,
+	"nextUid": 129,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -207,6 +207,103 @@
 			"pivotX": 0,
 			"pivotY": 0,
 			"fieldDefs": []
+		},
+		{
+			"identifier": "Door",
+			"uid": 125,
+			"tags": [],
+			"exportToToc": false,
+			"doc": null,
+			"width": 65,
+			"height": 46,
+			"resizableX": false,
+			"resizableY": false,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 1,
+			"lineOpacity": 1,
+			"hollow": false,
+			"color": "#BE4A2F",
+			"renderMode": "Rectangle",
+			"showName": true,
+			"tilesetId": null,
+			"tileRenderMode": "FitInside",
+			"tileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 0,
+			"limitScope": "PerLevel",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": [
+				{
+					"identifier": "is_open",
+					"doc": null,
+					"__type": "Bool",
+					"uid": 126,
+					"type": "F_Bool",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "CAMERA_REACH",
+					"doc": null,
+					"__type": "LocalEnum.CAMERA_REACH",
+					"uid": 128,
+					"type": "F_Enum(127)",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": {
+						"id": "V_String",
+						"params": ["FAR"]
+					},
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefTags": [],
+					"tilesetUid": null
+				}
+			]
 		}
 	], "tilesets": [
 		{
@@ -297,7 +394,7 @@
 				"averageColors": "b432f532d532f532d432f532f432f432f432f532f642f532f642f642f543f642f443f443f443f222f222f332f232f332f332f432f642f632f642f532f532f221f111f222f532f532f532f532f543f543f543f453f453f453f342f342f222f222f222f232f532f632f642f642f532f532f422f421f432f432f642f532f642f642f543f642f443f443f443e232e232f332f222f222f222f432f632f642f642f532f532f532d532f532f632f532f532f532f543f543f543644274426442f342f3424332b442b442f232d432f432f322f432e322f642f632f642f642f632f532f642f532f543f642f543c4420000c442e232e2328342734273427332c332f222f222f322d332f532f532f532f532f532f532f532f532f543f543f5439432b3329432f342f342f342f342f342d442f532f432f432f432f432343355433543b54365430000b75595440000f543f543e332b332e332e333e3339442f332f332f3320000b432d532d4320000362246125ddd5c7256421654f654f433332245433443c442b332c442f342f342f222f222f332f222b432f632f632f532d432f4315622c642454495435544f644f433822234330000e3327442e332e333e333f332c442c4429442f432f632f642f642f532000014310000a5439433b543f544f433d322000000004432f3324432745594424332f222f332f332d432f532f642f532e3221431f4312431764476333433943394332322000000004432f33244321343f3327442f332f342f342c332f422f432f322d332000024310000a42293220433b654e6554544000000004442f3324442000043320000433294429442f532f322f222f332f432000000000000000000008543f543f544b322000000004442f34244424442444200000000823263320000f532f432f4320000000000000000000000005533d543e4339322000000004442f4424442c332c33200000000e332b232f532f532000000000000000000000000000000000000000000000000000000003432b332343200000000f332f332f3320000f322f32200000000000000000000000000000000000000000000000000000000f332f221f33200000000f332f233f3320000f432f4320000000000000000000000000000000000000000000000000000f332f221f111f221f332f332f233f244f233f332000000000000000000000000000000000000000000000000000000000000f332f111f111f111f332f343f244f244f244f343000000000000000000000000000000000000000000000000000000000000f332f111f111f111f332f333f243f244f243f333000000000000000000000000000000000000000000000000000000000000f232f332f111f332f232f232f333f243f333f232000000000000000000000000000000000000000000000000000000000000f221f332f332f332f222f221f332f332f332f222000000000000000000000000000000000000000000000000000000000000f222f222f232f222f222f222f222f232f222f2220000000000000000000000000000000000000000000000000000000000000000f222f222f22200000000f222f222f222000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 			}
 		}
-	], "enums": [], "externalEnums": [], "levelFields": [] },
+	], "enums": [{ "identifier": "CAMERA_REACH", "uid": 127, "values": [ { "id": "NEAR", "tileId": null, "color": 12470831, "__tileSrcRect": null }, { "id": "FAR", "tileId": null, "color": 14120515, "__tileSrcRect": null } ], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] }], "externalEnums": [], "levelFields": [] },
 	"levels": [
 		{
 			"identifier": "Level_0",
@@ -344,6 +441,7 @@
 					"overrideTilesetUid": null,
 					"gridTiles": [
 						{ "px": [160,320], "src": [16,208], "f": 0, "t": 417, "d": [490] },
+						{ "px": [160,320], "src": [0,0], "f": 0, "t": 0, "d": [490] },
 						{ "px": [176,320], "src": [32,208], "f": 0, "t": 418, "d": [491] },
 						{ "px": [192,320], "src": [48,208], "f": 0, "t": 419, "d": [492] },
 						{ "px": [208,320], "src": [64,208], "f": 0, "t": 420, "d": [493] },
@@ -437,6 +535,26 @@
 							"defUid": 13,
 							"px": [80,80],
 							"fieldInstances": []
+						},
+						{
+							"__identifier": "Door",
+							"__grid": [10,20],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#BE4A2F",
+							"iid": "d93809c0-9f30-11ed-b1ca-0bb0ad76222d",
+							"width": 65,
+							"height": 46,
+							"defUid": 125,
+							"px": [160,320],
+							"fieldInstances": [
+								{ "__identifier": "is_open", "__value": false, "__type": "Bool", "__tile": null, "defUid": 126, "realEditorValues": [] },
+								{ "__identifier": "CAMERA_REACH", "__value": "NEAR", "__type": "LocalEnum.CAMERA_REACH", "__tile": null, "defUid": 128, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["NEAR"]
+								}] }
+							]
 						}
 					]
 				},
