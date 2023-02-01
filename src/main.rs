@@ -16,6 +16,7 @@ mod input;
 mod cursor_indicator;
 mod physics_bundle;
 mod game_logs;
+mod door;
 
 fn main() {
     App::new()

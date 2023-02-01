@@ -549,7 +549,10 @@
 							"defUid": 125,
 							"px": [160,320],
 							"fieldInstances": [
-								{ "__identifier": "is_open", "__value": false, "__type": "Bool", "__tile": null, "defUid": 126, "realEditorValues": [] },
+								{ "__identifier": "is_open", "__value": false, "__type": "Bool", "__tile": null, "defUid": 126, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ false ]
+								}] },
 								{ "__identifier": "CAMERA_REACH", "__value": "NEAR", "__type": "LocalEnum.CAMERA_REACH", "__tile": null, "defUid": 128, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["NEAR"]
