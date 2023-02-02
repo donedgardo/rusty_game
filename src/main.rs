@@ -5,6 +5,7 @@ use level::LevelPlugin;
 use player::PlayerPlugin;
 use crate::camera::CameraPlugin;
 use crate::cursor_indicator::CursorIndicatorPlugin;
+use crate::door::DoorPlugin;
 use crate::game_logs::UIPlugin;
 use crate::input::MyInputPlugin;
 
@@ -17,6 +18,7 @@ mod cursor_indicator;
 mod physics_bundle;
 mod game_logs;
 mod door;
+mod interaction;
 
 fn main() {
     App::new()
@@ -37,5 +39,6 @@ fn main() {
         .add_plugin(MyInputPlugin)
         .add_plugin(CursorIndicatorPlugin)
         .add_plugin(UIPlugin)
+        .add_plugin(DoorPlugin)
         .run();
 }
