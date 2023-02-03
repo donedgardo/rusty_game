@@ -449,7 +449,10 @@
 							"height": 32,
 							"defUid": 125,
 							"px": [176,336],
-							"fieldInstances": [{ "__identifier": "is_open", "__value": true, "__type": "Bool", "__tile": null, "defUid": 126, "realEditorValues": [] }]
+							"fieldInstances": [{ "__identifier": "is_open", "__value": true, "__type": "Bool", "__tile": null, "defUid": 126, "realEditorValues": [{
+								"id": "V_Bool",
+								"params": [ true ]
+							}] }]
 						}
 					]
 				},
