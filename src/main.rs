@@ -31,7 +31,7 @@ fn main() {
         }))
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
+        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(LevelPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(CameraPlugin)
