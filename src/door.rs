@@ -3,6 +3,7 @@ use bevy_ecs_ldtk::{EntityInstance, LdtkEntity};
 use bevy_ecs_ldtk::ldtk::FieldValue;
 use bevy_ecs_ldtk::prelude::RegisterLdtkObjects;
 use crate::interaction::Interaction;
+use crate::physics_bundle::{ObjectPhysicsBundle};
 
 pub struct DoorPlugin;
 
@@ -21,6 +22,9 @@ pub struct DoorBundle {
     #[bundle]
     #[sprite_sheet_bundle("dungeon/doors.png", 32.0, 32.0, 2, 1, 0.0, 0.0, 1)]
     pub sprite_sheet_bundle: SpriteSheetBundle,
+    #[from_entity_instance]
+    #[bundle]
+    pub physics: ObjectPhysicsBundle,
 }
 
 #[derive(Component, Default)]
@@ -72,6 +76,7 @@ fn update_door_sprites(
 #[cfg(test)]
 mod doors_test {
     use bevy::prelude::{App, TextureAtlasSprite, With};
+    use bevy_rapier2d::prelude::*;
     use crate::door::{Door, DoorPlugin};
     use crate::interaction::Interaction;
     use crate::level::LevelPlugin;
@@ -134,6 +139,18 @@ mod doors_test {
             .query_filtered::<&TextureAtlasSprite, With<Door>>()
             .single(&app.world);
         assert_eq!(sprite.index, 0);
+    }
+
+    #[test]
+    fn it_has_a_collider_with_a_sensor() {
+        let mut app = setup();
+        test_utils::update(&mut app, 3);
+        let door_with_collider_sensor_count = app.world
+            .query::<(&Door, &Sensor, &Collider, &RigidBody)>()
+            .iter(&app.world)
+            .len();
+        assert_eq!(door_with_collider_sensor_count, 1);
+
     }
 
     fn setup() -> App {
