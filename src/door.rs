@@ -1,9 +1,9 @@
-use bevy::prelude::{App, Plugin, SpriteSheetBundle, Bundle, Component, TextureAtlasSprite, Changed, Query, Commands, Entity, BuildChildren, Mut, Children};
+use bevy::prelude::{App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, Mut, Plugin, Query, SpriteSheetBundle, TextureAtlasSprite};
 use bevy_ecs_ldtk::prelude::{EntityInstance, LdtkEntity, RegisterLdtkObjects};
 use bevy_ecs_ldtk::ldtk::FieldValue;
-use bevy_rapier2d::prelude::Collider;
-use crate::interaction::Interaction;
-use crate::physics_bundle::{ObjectPhysicsBundle};
+use bevy_rapier2d::prelude::{Collider};
+use crate::interaction::{Interaction};
+use crate::physics_bundle::ObjectPhysicsBundle;
 
 pub struct DoorPlugin;
 
@@ -98,7 +98,8 @@ fn set_open_door_sprite(sprite: &mut Mut<TextureAtlasSprite>) {
 
 fn add_blocking_collider(commands: &mut Commands, entity: Entity) {
     commands.entity(entity).with_children(|parent| {
-        parent.spawn(Collider::cuboid(3.0, 1.0)); });
+        parent.spawn(Collider::cuboid(3.0, 1.0));
+    });
 }
 
 
@@ -108,7 +109,7 @@ mod doors_test {
     use bevy::prelude::{App, Children, Entity, TextureAtlasSprite, With, Without};
     use bevy_rapier2d::prelude::*;
     use crate::door::{Door, DoorPlugin};
-    use crate::interaction::Interaction;
+    use crate::interaction::{Interaction};
     use crate::level::LevelPlugin;
     use crate::test_utils;
     use crate::test_utils::LoadTestPlugins;
@@ -211,13 +212,6 @@ mod doors_test {
         assert!(blocking_collider.is_err());
     }
 
-    fn interact_with_door(app: &mut App) {
-        let mut door = app.world
-            .query::<&mut Door>()
-            .single_mut(&mut app.world);
-        door.interact();
-    }
-
     fn get_blocking_collider(app: &mut App) -> Result<&Collider, QueryEntityError> {
         let mut blocking_collider = Err(QueryEntityError::NoSuchEntity(Entity::from_raw(0)));
         let mut children_q = app.world
@@ -233,10 +227,18 @@ mod doors_test {
         blocking_collider
     }
 
+    fn interact_with_door(app: &mut App) {
+        let mut door = app.world
+            .query::<&mut Door>()
+            .single_mut(&mut app.world);
+        door.interact();
+    }
+
     fn setup() -> App {
         let mut app = App::new();
         app.add_plugins(LoadTestPlugins)
             .add_plugin(LevelPlugin)
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
             .add_plugin(DoorPlugin);
         app
     }

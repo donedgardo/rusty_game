@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
+use crate::interaction::Interactor;
 use crate::physics_bundle::CharacterPhysicsBundle;
 
 pub struct PlayerPlugin;
@@ -33,6 +34,7 @@ pub struct PlayerBundle {
     #[from_entity_instance]
     #[bundle]
     pub physics: CharacterPhysicsBundle,
+    pub interactor: Interactor,
 }
 
 fn camera_follow(

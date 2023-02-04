@@ -1,7 +1,7 @@
 use bevy::prelude::Bundle;
 use bevy_rapier2d::dynamics::{GravityScale, LockedAxes, RigidBody, Velocity};
 use bevy_ecs_ldtk::EntityInstance;
-use bevy_rapier2d::prelude::{Collider, Sensor};
+use bevy_rapier2d::prelude::{ActiveEvents, Collider, Sensor};
 
 #[derive(Bundle, Default)]
 pub struct CharacterPhysicsBundle {
@@ -32,6 +32,7 @@ pub struct ObjectPhysicsBundle {
     pub rigid_body: RigidBody,
     pub collider: Collider,
     pub sensor: Sensor,
+    pub events: ActiveEvents,
 }
 
 impl From<EntityInstance> for ObjectPhysicsBundle {
@@ -40,7 +41,8 @@ impl From<EntityInstance> for ObjectPhysicsBundle {
             "Door" => ObjectPhysicsBundle {
                 collider: Collider::cuboid(16., 16.),
                 rigid_body: RigidBody::Fixed,
-                sensor: Sensor
+                sensor: Sensor,
+                events: ActiveEvents::COLLISION_EVENTS
             },
             _ => ObjectPhysicsBundle::default(),
         }

@@ -8,6 +8,7 @@ use crate::cursor_indicator::CursorIndicatorPlugin;
 use crate::door::DoorPlugin;
 use crate::game_logs::UIPlugin;
 use crate::input::MyInputPlugin;
+use crate::interaction::InteractionPlugin;
 
 mod level;
 mod camera;
@@ -40,5 +41,6 @@ fn main() {
         .add_plugin(CursorIndicatorPlugin)
         .add_plugin(UIPlugin)
         .add_plugin(DoorPlugin)
+        .add_plugin(InteractionPlugin)
         .run();
 }
