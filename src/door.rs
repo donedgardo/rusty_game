@@ -1,8 +1,9 @@
-use bevy::prelude::{App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, Mut, Plugin, Query, SpriteSheetBundle, TextureAtlasSprite};
+use bevy::input::Input;
+use bevy::prelude::{App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, KeyCode, Mut, Plugin, Query, Res, SpriteSheetBundle, TextureAtlasSprite, With};
 use bevy_ecs_ldtk::prelude::{EntityInstance, LdtkEntity, RegisterLdtkObjects};
 use bevy_ecs_ldtk::ldtk::FieldValue;
 use bevy_rapier2d::prelude::{Collider};
-use crate::interaction::{Interaction};
+use crate::interaction::{Interaction, Interactive};
 use crate::physics_bundle::ObjectPhysicsBundle;
 
 pub struct DoorPlugin;
@@ -11,6 +12,7 @@ impl Plugin for DoorPlugin {
     fn build(&self, app: &mut App) {
         app
             .register_ldtk_entity::<DoorBundle>("Door")
+            .add_system(door_interaction)
             .add_system(update_changed_doors);
     }
 }
@@ -61,6 +63,16 @@ impl From<EntityInstance> for Door {
     }
 }
 
+fn door_interaction(
+    mut interactive_door_q: Query<&mut Door, With<Interactive>>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    for mut door in interactive_door_q.iter_mut() {
+        if !keyboard_input.just_pressed(KeyCode::E) { return; }
+        door.interact();
+    }
+}
+
 fn update_changed_doors(
     mut commands: Commands,
     mut door_query: Query<(&Door, &mut TextureAtlasSprite, Entity, Option<&Children>), Changed<Door>>,
@@ -106,11 +118,15 @@ fn add_blocking_collider(commands: &mut Commands, entity: Entity) {
 #[cfg(test)]
 mod doors_test {
     use bevy::ecs::query::QueryEntityError;
-    use bevy::prelude::{App, Children, Entity, TextureAtlasSprite, With, Without};
+    use bevy::input::{ButtonState, InputPlugin};
+    use bevy::input::keyboard::KeyboardInput;
+    use bevy::math::Vec3;
+    use bevy::prelude::{App, Children, Entity, KeyCode, TextureAtlasSprite, Transform, With, Without};
     use bevy_rapier2d::prelude::*;
     use crate::door::{Door, DoorPlugin};
-    use crate::interaction::{Interaction};
+    use crate::interaction::{Interaction, InteractionPlugin};
     use crate::level::LevelPlugin;
+    use crate::player::{Player, PlayerPlugin};
     use crate::test_utils;
     use crate::test_utils::LoadTestPlugins;
 
@@ -212,6 +228,24 @@ mod doors_test {
         assert!(blocking_collider.is_err());
     }
 
+    #[test]
+    fn it_interacts_on_object_when_near_and_using_input() {
+        let mut app = setup();
+        test_utils::update(&mut app, 3);
+        move_player_to_door(&mut app);
+        test_utils::update(&mut app, 2);
+        app.world.send_event(KeyboardInput {
+            scan_code: 0,
+            key_code: Option::from(KeyCode::E),
+            state: ButtonState::Pressed,
+        });
+        test_utils::update(&mut app, 1);
+        let door = app.world
+            .query::<&Door>()
+            .single(&app.world);
+        assert!(!door.is_open());
+    }
+
     fn get_blocking_collider(app: &mut App) -> Result<&Collider, QueryEntityError> {
         let mut blocking_collider = Err(QueryEntityError::NoSuchEntity(Entity::from_raw(0)));
         let mut children_q = app.world
@@ -234,9 +268,27 @@ mod doors_test {
         door.interact();
     }
 
+    fn move_player_to_door(app: &mut App) {
+        let door_transform = app.world
+            .query_filtered::<&Transform, With<Door>>()
+            .single(&app.world);
+        let door_translation = door_transform.translation;
+        move_player(app, door_translation);
+    }
+
+    fn move_player(app: &mut App, translation: Vec3) {
+        let mut player_transform = app.world
+            .query_filtered::<&mut Transform, With<Player>>()
+            .single_mut(&mut app.world);
+        player_transform.translation = translation;
+    }
+
     fn setup() -> App {
         let mut app = App::new();
         app.add_plugins(LoadTestPlugins)
+            .add_plugin(PlayerPlugin)
+            .add_plugin(InputPlugin)
+            .add_plugin(InteractionPlugin)
             .add_plugin(LevelPlugin)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
             .add_plugin(DoorPlugin);

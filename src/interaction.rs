@@ -5,7 +5,7 @@ pub struct InteractionPlugin;
 
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(add_interaction_text_on_collision);
+        app.add_system(add_interactive_on_collision);
     }
 }
 
@@ -17,9 +17,9 @@ pub trait Interaction {
 pub struct Interactor;
 
 #[derive(Component)]
-pub struct InteractionText;
+pub struct Interactive;
 
-pub fn add_interaction_text_on_collision(
+pub fn add_interactive_on_collision(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
     interactor_q: Query<&Interactor>,
@@ -27,14 +27,16 @@ pub fn add_interaction_text_on_collision(
     for collision_event in collision_events.iter() {
         match collision_event {
             CollisionEvent::Started(e1, e2, _) => {
-                add_interaction_text_to_interactor(
+                println!("start");
+                add_interactive_to_object(
                     &mut commands,
                     &interactor_q,
                     vec![e1, e2],
                 );
             }
             CollisionEvent::Stopped(e1, e2, _) => {
-                remove_interaction_text_from_interactor(
+                println!("stopped");
+                remove_interactive_from_object(
                     &mut commands,
                     &interactor_q,
                     vec![e1, e2],
@@ -44,95 +46,88 @@ pub fn add_interaction_text_on_collision(
     }
 }
 
-fn remove_interaction_text_from_interactor(
+fn remove_interactive_from_object(
     commands: &mut Commands,
     interactor_q: &Query<&Interactor>,
     entities: Vec<&Entity>,
 ) {
     for e in entities.into_iter() {
-        if interactor_q.get(*e).is_ok() {
-            commands.entity(*e).remove::<InteractionText>();
+        if interactor_q.get(*e).is_err() {
+            commands.entity(*e).remove::<Interactive>();
         }
     }
 }
 
-fn add_interaction_text_to_interactor(
+fn add_interactive_to_object(
     commands: &mut Commands,
     interactor_q: &Query<&Interactor>,
     entities: Vec<&Entity>,
 ) {
     for e in entities.into_iter() {
-        if interactor_q.get(*e).is_ok() {
-            commands.entity(*e).insert(InteractionText);
+        if interactor_q.get(*e).is_err() {
+            commands.entity(*e).insert(Interactive);
         }
     };
 }
 
 #[cfg(test)]
 mod interaction_tests {
-    use bevy::prelude::{App, Transform, Vec3, With};
-    use bevy_rapier2d::prelude::{NoUserData, RapierPhysicsPlugin};
-    use crate::door::{Door, DoorPlugin};
-    use crate::interaction::{InteractionPlugin, InteractionText};
-    use crate::level::LevelPlugin;
-    use crate::player::{Player, PlayerPlugin};
-    use crate::test_utils;
+    use bevy::prelude::{App, Entity, Transform};
+    use bevy_rapier2d::dynamics::LockedAxes;
+    use bevy_rapier2d::prelude::{ActiveEvents, Collider, CollisionEvent, GravityScale, NoUserData, RapierPhysicsPlugin, RigidBody, Sensor};
+    use bevy_rapier2d::rapier::prelude::CollisionEventFlags;
+    use crate::interaction::{InteractionPlugin, Interactive, Interactor};
+    use crate::physics_bundle::{CharacterPhysicsBundle, ObjectPhysicsBundle};
     use crate::test_utils::LoadTestPlugins;
 
     #[test]
-    fn it_adds_interaction_text_when_player_is_near_door() {
-        let mut app = setup();
-        test_utils::update(&mut app, 3);
-        move_player_to_door(&mut app);
-        test_utils::update(&mut app, 2);
-        let interaction_text_count = app.world
-            .query::<&InteractionText>()
-            .iter(&app.world).len();
-        assert_eq!(interaction_text_count, 1);
+    fn it_adds_interactive_to_object_when_near_interactor() {
+        let (mut app, player, object) = setup();
+        app.update();
+        app.world.send_event(CollisionEvent::Started(player, object, CollisionEventFlags::SENSOR));
+        app.update();
+        let interactive = app.world.get::<Interactive>(object);
+        assert!(interactive.is_some());
     }
 
     #[test]
     fn it_removes_interaction_text_when_player_moves_away_from_door() {
-        let mut app = setup();
-        test_utils::update(&mut app, 3);
-        let player_original_translation = app.world
-            .query_filtered::<&Transform, With<Player>>()
-            .single(&app.world)
-            .translation;
-        move_player_to_door(&mut app);
-        test_utils::update(&mut app, 2);
-        move_player(&mut app, player_original_translation);
-        test_utils::update(&mut app, 2);
-        let interaction_text_count = app.world
-            .query::<&InteractionText>()
-            .iter(&app.world).len();
-        assert_eq!(interaction_text_count, 0);
+        let (mut app, player, object) = setup();
+        app.update();
+        app.world.send_event(CollisionEvent::Started(player, object, CollisionEventFlags::SENSOR));
+        app.update();
+        app.world.send_event(CollisionEvent::Stopped(player, object, CollisionEventFlags::SENSOR));
+        app.update();
+        let interactive = app.world.get::<Interactive>(object);
+        assert!(interactive.is_none());
     }
 
-    fn move_player_to_door(app: &mut App) {
-        let door_transform = app.world
-            .query_filtered::<&Transform, With<Door>>()
-            .single(&app.world);
-        let door_translation = door_transform.translation;
-        move_player(app, door_translation);
-    }
-
-    fn move_player(app: &mut App, translation: Vec3) {
-        let mut player_transform = app.world
-            .query_filtered::<&mut Transform, With<Player>>()
-            .single_mut(&mut app.world);
-        player_transform.translation = translation;
-    }
-
-    fn setup() -> App {
+    fn setup() -> (App, Entity, Entity) {
         let mut app = App::new();
         app.add_plugins(LoadTestPlugins)
-            .add_plugin(LevelPlugin)
-            .add_plugin(PlayerPlugin)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-            .add_plugin(DoorPlugin)
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.))
             .add_plugin(InteractionPlugin);
-        app
+        let interactor = app.world.spawn((
+            Interactor,
+            CharacterPhysicsBundle {
+                collider: Collider::capsule_y(4., 7.),
+                rigid_body: RigidBody::Dynamic,
+                rotation_constraints: LockedAxes::ROTATION_LOCKED,
+                gravity: GravityScale(0.),
+                ..Default::default()
+            },
+            Transform::default()
+        )).id();
+        let object = app.world.spawn((
+            ObjectPhysicsBundle {
+                collider: Collider::cuboid(16., 16.),
+                rigid_body: RigidBody::Fixed,
+                sensor: Sensor,
+                events: ActiveEvents::COLLISION_EVENTS,
+            },
+            Transform::default(),
+        )).id();
+        (app, interactor, object)
     }
 }
 

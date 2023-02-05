@@ -27,6 +27,7 @@ impl From<EntityInstance> for CharacterPhysicsBundle {
         }
     }
 }
+
 #[derive(Bundle, Default)]
 pub struct ObjectPhysicsBundle {
     pub rigid_body: RigidBody,
