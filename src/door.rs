@@ -1,6 +1,5 @@
 use bevy::input::Input;
-use bevy::prelude::{Added, App, AssetServer, BuildChildren, Bundle, Changed, Children, Color, Commands, Component, default, Entity, KeyCode, Mut, Plugin, Query, Res, SpriteSheetBundle, Text, TextStyle, TextureAtlasSprite, Transform, With};
-use bevy::text::{Text2dBundle, TextAlignment};
+use bevy::prelude::{App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, KeyCode, Mut, Plugin, Query, Res, SpriteSheetBundle, TextureAtlasSprite, With};
 use bevy_ecs_ldtk::prelude::{EntityInstance, LdtkEntity, RegisterLdtkObjects};
 use bevy_ecs_ldtk::ldtk::FieldValue;
 use bevy_rapier2d::prelude::{Collider};
@@ -14,7 +13,6 @@ impl Plugin for DoorPlugin {
         app
             .register_ldtk_entity::<DoorBundle>("Door")
             .add_system(door_interaction)
-            .add_system(door_interaction_text)
             .add_system(update_changed_doors);
     }
 }
@@ -62,27 +60,6 @@ impl From<EntityInstance> for Door {
                 }
             }
         }
-    }
-}
-
-fn door_interaction_text(
-    mut commands: Commands,
-    interactive_door_q: Query<(&Transform, &Door), Added<Interactive>>,
-    asset_server: Res<AssetServer>,
-) {
-    let font = asset_server.load("fonts/kongtext/kongtext.ttf");
-    let text_style = TextStyle {
-        font,
-        font_size: 14.0,
-        color: Color::WHITE,
-    };
-    for (transform, _) in interactive_door_q.iter() {
-        commands.spawn(Text2dBundle {
-            text: Text::from_section("Open [E]", text_style.clone())
-                .with_alignment(TextAlignment::CENTER),
-            transform: transform.clone(),
-            ..default()
-        });
     }
 }
 
@@ -144,7 +121,7 @@ mod doors_test {
     use bevy::input::{ButtonState, InputPlugin};
     use bevy::input::keyboard::KeyboardInput;
     use bevy::math::Vec3;
-    use bevy::prelude::{App, Children, Entity, KeyCode, Text, TextureAtlasSprite, Transform, With, Without};
+    use bevy::prelude::{App, Children, Entity, KeyCode, TextureAtlasSprite, Transform, With, Without};
     use bevy_rapier2d::prelude::*;
     use crate::door::{Door, DoorPlugin};
     use crate::interaction::{Interaction, InteractionPlugin};
@@ -249,20 +226,6 @@ mod doors_test {
         app.update();
         let blocking_collider = get_blocking_collider(&mut app);
         assert!(blocking_collider.is_err());
-    }
-
-
-    #[test]
-    fn it_adds_text_on_interactive_door() {
-        let mut app = setup();
-        test_utils::update(&mut app, 3);
-        move_player_to_door(&mut app);
-        test_utils::update(&mut app, 3);
-        let text = app.world
-            .query::<&Text>()
-            .single(&app.world);
-        let value = text.sections[0].clone().value;
-        assert_eq!(value, "Open [E]".to_string());
     }
 
     #[test]

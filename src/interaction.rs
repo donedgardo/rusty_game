@@ -16,6 +16,9 @@ pub trait Interaction {
 #[derive(Component, Default)]
 pub struct Interactor;
 
+#[derive(Component, Default)]
+pub struct InteractiveText;
+
 #[derive(Component)]
 pub struct Interactive;
 

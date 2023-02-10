@@ -29,7 +29,7 @@ fn main() {
                 ..default()
             },
             ..default()
-        }))
+        }).set(ImagePlugin::default_nearest()))
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         //.add_plugin(RapierDebugRenderPlugin::default())

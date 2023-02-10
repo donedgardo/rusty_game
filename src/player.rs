@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
-use crate::interaction::Interactor;
+use crate::interaction::{InteractiveText, Interactor};
 use crate::physics_bundle::CharacterPhysicsBundle;
 
 pub struct PlayerPlugin;
@@ -9,6 +9,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app
             .register_ldtk_entity::<PlayerBundle>("Player")
+            .add_system(add_interactive_text)
             .add_system(camera_follow);
     }
 }
@@ -47,6 +48,32 @@ fn camera_follow(
             commands.entity(player).add_child(camera);
             transform.translation.z -= p_transform.translation.z;
         }
+    }
+}
+
+fn add_interactive_text(
+    mut commands: Commands,
+    player_q: Query<Entity, Added<Player>>,
+    asset: Res<AssetServer>,
+) {
+    let font = asset.load("fonts/Noto_Sans/NotoSans-ExtraLight.ttf");
+    let text_style = TextStyle {
+        font,
+        font_size: 20.0,
+        color: Color::WHITE,
+    };
+    for player in player_q.iter() {
+        commands.entity(player).with_children(|parent| {
+            parent.spawn((
+                Text2dBundle {
+                    text: Text::from_section("", text_style.clone())
+                        .with_alignment(TextAlignment::CENTER),
+                    transform: Transform::from_xyz(0., 20., 0.).with_scale(Vec3::splat(0.5)),
+                    ..default()
+                },
+                InteractiveText
+            ));
+        });
     }
 }
 
@@ -120,6 +147,14 @@ mod player_tests {
         test_utils::update(&mut app, 3);
         let gravity = app.world.query_filtered::<&GravityScale, With<Player>>().single(&app.world);
         assert_eq!(gravity.0, 0.);
+    }
+
+    #[test]
+    fn has_empty_interactive_text() {
+        let mut app = setup();
+        test_utils::update(&mut app, 3);
+        let text = app.world.query_filtered::<&Text, With<InteractiveText>>().single(&app.world);
+        assert_eq!(text.sections[0].value, "");
     }
 
     fn setup() -> App {
