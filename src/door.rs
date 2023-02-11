@@ -1,9 +1,9 @@
 use bevy::input::Input;
-use bevy::prelude::{App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, KeyCode, Mut, Plugin, Query, Res, SpriteSheetBundle, TextureAtlasSprite, With};
+use bevy::prelude::{App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, KeyCode, Mut, Plugin, Query, Res, SpriteSheetBundle, Text, TextureAtlasSprite, With};
 use bevy_ecs_ldtk::prelude::{EntityInstance, LdtkEntity, RegisterLdtkObjects};
 use bevy_ecs_ldtk::ldtk::FieldValue;
 use bevy_rapier2d::prelude::{Collider};
-use crate::interaction::{Interaction, Interactive};
+use crate::interaction::{Interaction, Interactive, InteractiveText};
 use crate::physics_bundle::ObjectPhysicsBundle;
 
 pub struct DoorPlugin;
@@ -13,6 +13,7 @@ impl Plugin for DoorPlugin {
         app
             .register_ldtk_entity::<DoorBundle>("Door")
             .add_system(door_interaction)
+            .add_system(door_interaction_text)
             .add_system(update_changed_doors);
     }
 }
@@ -58,6 +59,21 @@ impl From<EntityInstance> for Door {
                     FieldValue::Bool(is_open) => { Door { is_open } }
                     _ => { default_door }
                 }
+            }
+        }
+    }
+}
+
+fn door_interaction_text(
+    interactive_door_q: Query<&Door, With<Interactive>>,
+    mut text_q: Query<&mut Text, With<InteractiveText>>,
+) {
+    for door in interactive_door_q.iter() {
+        for mut text in text_q.iter_mut() {
+            if door.is_open() {
+                text.sections[0].value = "[E] Close".to_string();
+            } else {
+                text.sections[0].value = "[E] Open".to_string();
             }
         }
     }
@@ -121,10 +137,10 @@ mod doors_test {
     use bevy::input::{ButtonState, InputPlugin};
     use bevy::input::keyboard::KeyboardInput;
     use bevy::math::Vec3;
-    use bevy::prelude::{App, Children, Entity, KeyCode, TextureAtlasSprite, Transform, With, Without};
+    use bevy::prelude::{App, Children, Entity, KeyCode, Text, TextureAtlasSprite, Transform, With, Without};
     use bevy_rapier2d::prelude::*;
     use crate::door::{Door, DoorPlugin};
-    use crate::interaction::{Interaction, InteractionPlugin};
+    use crate::interaction::{Interaction, InteractionPlugin, InteractiveText};
     use crate::level::LevelPlugin;
     use crate::player::{Player, PlayerPlugin};
     use crate::test_utils;
@@ -244,6 +260,31 @@ mod doors_test {
             .query::<&Door>()
             .single(&app.world);
         assert!(!door.is_open());
+    }
+
+    #[test]
+    fn it_add_close_text_to_player_near_door() {
+        let mut app = setup();
+        test_utils::update(&mut app, 3);
+        move_player_to_door(&mut app);
+        test_utils::update(&mut app, 3);
+        let text = app.world
+            .query_filtered::<&Text, With<InteractiveText>>()
+            .single(&app.world);
+        assert_eq!(text.sections[0].value, "[E] Close")
+    }
+
+    #[test]
+    fn it_add_open_text_to_player_near_door() {
+        let mut app = setup();
+        test_utils::update(&mut app, 3);
+        move_player_to_door(&mut app);
+        interact_with_door(&mut app);
+        test_utils::update(&mut app, 3);
+        let text = app.world
+            .query_filtered::<&Text, With<InteractiveText>>()
+            .single(&app.world);
+        assert_eq!(text.sections[0].value, "[E] Open")
     }
 
     fn get_blocking_collider(app: &mut App) -> Result<&Collider, QueryEntityError> {
