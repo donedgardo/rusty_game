@@ -1,11 +1,11 @@
-use bevy::prelude::{App, Commands, Component, Entity, EventReader, Plugin, Query};
+use bevy::prelude::{App, Commands, Component, Entity, EventReader, Plugin, Query, Text, With};
 use bevy_rapier2d::pipeline::CollisionEvent;
 
 pub struct InteractionPlugin;
 
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(add_interactive_on_collision);
+        app.add_system(handle_interactive_collisions);
     }
 }
 
@@ -22,15 +22,15 @@ pub struct InteractiveText;
 #[derive(Component)]
 pub struct Interactive;
 
-pub fn add_interactive_on_collision(
+pub fn handle_interactive_collisions(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
     interactor_q: Query<&Interactor>,
+    mut interactive_text_q: Query<&mut Text, With<InteractiveText>>
 ) {
     for collision_event in collision_events.iter() {
         match collision_event {
             CollisionEvent::Started(e1, e2, _) => {
-                println!("start");
                 add_interactive_to_object(
                     &mut commands,
                     &interactor_q,
@@ -38,14 +38,20 @@ pub fn add_interactive_on_collision(
                 );
             }
             CollisionEvent::Stopped(e1, e2, _) => {
-                println!("stopped");
                 remove_interactive_from_object(
                     &mut commands,
                     &interactor_q,
                     vec![e1, e2],
                 );
+                remove_interactive_text(&mut interactive_text_q);
             }
         }
+    }
+}
+
+fn remove_interactive_text(interactive_text_q: &mut Query<&mut Text, With<InteractiveText>>) {
+    for mut text in interactive_text_q.iter_mut() {
+        text.sections[0].value = "".to_string();
     }
 }
 
@@ -75,11 +81,12 @@ fn add_interactive_to_object(
 
 #[cfg(test)]
 mod interaction_tests {
-    use bevy::prelude::{App, Entity, Transform};
+    use bevy::prelude::{App, Entity, Text, TextBundle, Transform};
+    use bevy::text::TextStyle;
     use bevy_rapier2d::dynamics::LockedAxes;
     use bevy_rapier2d::prelude::{ActiveEvents, Collider, CollisionEvent, GravityScale, NoUserData, RapierPhysicsPlugin, RigidBody, Sensor};
     use bevy_rapier2d::rapier::prelude::CollisionEventFlags;
-    use crate::interaction::{InteractionPlugin, Interactive, Interactor};
+    use crate::interaction::{InteractionPlugin, Interactive, InteractiveText, Interactor};
     use crate::physics_bundle::{CharacterPhysicsBundle, ObjectPhysicsBundle};
     use crate::test_utils::LoadTestPlugins;
 
@@ -94,7 +101,7 @@ mod interaction_tests {
     }
 
     #[test]
-    fn it_removes_interaction_text_when_player_moves_away_from_door() {
+    fn it_removes_interactive_from_door_when_player_moves_away() {
         let (mut app, player, object) = setup();
         app.update();
         app.world.send_event(CollisionEvent::Started(player, object, CollisionEventFlags::SENSOR));
@@ -103,6 +110,16 @@ mod interaction_tests {
         app.update();
         let interactive = app.world.get::<Interactive>(object);
         assert!(interactive.is_none());
+    }
+
+    #[test]
+    fn it_removes_interactive_text_when_player_moves_away_from_door() {
+        let (mut app, player, object) = setup();
+        app.update();
+        app.world.send_event(CollisionEvent::Stopped(player, object, CollisionEventFlags::SENSOR));
+        app.update();
+        let text = app.world.get::<Text>(player).unwrap();
+        assert_eq!(text.sections[0].value, "");
     }
 
     fn setup() -> (App, Entity, Entity) {
@@ -119,7 +136,8 @@ mod interaction_tests {
                 gravity: GravityScale(0.),
                 ..Default::default()
             },
-            Transform::default()
+            TextBundle::from_section("text", TextStyle::default()),
+            InteractiveText
         )).id();
         let object = app.world.spawn((
             ObjectPhysicsBundle {
