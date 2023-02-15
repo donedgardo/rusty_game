@@ -1,41 +1,13 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
+use crate::gamepad::MyGamepad;
 use crate::player::Player;
 
 pub struct MyInputPlugin;
 
 impl Plugin for MyInputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(gamepad_detection)
-            .add_system(movement_input);
-    }
-}
-
-#[derive(Resource)]
-pub struct MyGamepad(Gamepad);
-
-fn gamepad_detection(
-    mut commands: Commands,
-    my_gamepad: Option<Res<MyGamepad>>,
-    mut gamepad_evr: EventReader<GamepadEvent>,
-) {
-    for ev in gamepad_evr.iter() {
-        let id = ev.gamepad;
-        match &ev.event_type {
-            GamepadEventType::Connected(_) => {
-                if my_gamepad.is_none() {
-                    commands.insert_resource(MyGamepad(id));
-                }
-            }
-            GamepadEventType::Disconnected => {
-                if let Some(MyGamepad(old_id)) = my_gamepad.as_deref() {
-                    if *old_id == id {
-                        commands.remove_resource::<MyGamepad>();
-                    }
-                }
-            }
-            _ => {}
-        }
+        app.add_system(movement_input);
     }
 }
 
@@ -104,6 +76,7 @@ mod input_tests {
     use bevy::input::gamepad::GamepadInfo;
     use bevy::input::keyboard::KeyboardInput;
     use bevy::prelude::GamepadAxisType::{LeftStickX, LeftStickY};
+    use crate::gamepad::GamepadPlugin;
     use crate::test_utils;
     use crate::player::*;
 
@@ -221,6 +194,7 @@ mod input_tests {
         app
             .add_plugin(TimePlugin)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+            .add_plugin(GamepadPlugin)
             .add_plugin(InputPlugin)
             .add_plugin(MyInputPlugin);
         let player_entity = app.world.spawn(PlayerBundle::default()).id();

@@ -7,19 +7,21 @@ use crate::camera::CameraPlugin;
 use crate::cursor_indicator::CursorIndicatorPlugin;
 use crate::door::DoorPlugin;
 use crate::game_logs::UIPlugin;
-use crate::input::MyInputPlugin;
+use crate::gamepad::GamepadPlugin;
+use crate::movement::MyInputPlugin;
 use crate::interaction::InteractionPlugin;
 
 mod level;
 mod camera;
 mod test_utils;
 mod player;
-mod input;
+mod movement;
 mod cursor_indicator;
 mod physics_bundle;
 mod game_logs;
 mod door;
 mod interaction;
+mod gamepad;
 
 fn main() {
     App::new()
@@ -37,6 +39,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(CameraPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(GamepadPlugin)
         .add_plugin(MyInputPlugin)
         .add_plugin(CursorIndicatorPlugin)
         .add_plugin(UIPlugin)
