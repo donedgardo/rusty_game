@@ -83,7 +83,6 @@ mod indicator_cursor_test {
     #[test]
     fn it_spawns_indicator_as_child_of_player() {
         let mut app = setup();
-        app.update();
         let cursor = app.world
             .query_filtered::<&Parent, With<CursorIndicator>>().get_single(&app.world);
         assert!(cursor.is_ok());
@@ -92,25 +91,32 @@ mod indicator_cursor_test {
     #[test]
     fn it_has_a_sprite_sheet() {
         let mut app = setup();
-        app.update();
         let sprite = app.world
             .query_filtered::<&Sprite, With<CursorIndicator>>()
             .get_single(&app.world);
         assert!(sprite.is_ok());
     }
+    #[test]
+    fn indicator_doesnt_looks_at_mouse_when_unmoved() {
+        let mut app = setup();
+        let cursor_transform = app.world
+            .query_filtered::<&Transform, With<CursorIndicator>>()
+            .single(&app.world);
+        assert_eq!(cursor_transform.rotation.xyz(), Vec3::new(0., 0., 0.));
+    }
 
     #[test]
-    fn indicator_looks_at_mouse() {
+    fn indicator_looks_at_mouse_when_moved() {
         let mut app = setup();
         app.world.send_event(CursorMoved {
             id: Default::default(),
             position: Vec2::new(0., 50.),
         });
-        update(&mut app, 2);
+        update(&mut app, 1);
         let cursor_transform = app.world
             .query_filtered::<&Transform, With<CursorIndicator>>()
             .single(&app.world);
-        assert_eq!(cursor_transform.forward(), Vec3::new(0., 0., -1.));
+        assert_eq!(cursor_transform.rotation.xyz(), Vec3::new(0., 0., 1.));
     }
 
     fn setup() -> App {
@@ -120,7 +126,8 @@ mod indicator_cursor_test {
             .add_plugin(CameraPlugin)
             .add_plugin(CursorIndicatorPlugin)
             .insert_resource(window);
-        let _ = app.world.spawn(Player).id();
+        app.world.spawn(Player);
+        app.update();
         app
     }
 }
