@@ -1,8 +1,11 @@
 # TODO
-
--[ ] Add CI pipeline in github actions
-  * test
-
--[ ] Add CD pipeline github
-  * build
-  * deploy
+-[ ] Add cursor indicator gamepad support
+-[ ] Add interaction gamepad support
+-[ ] Add menu scene
+  * Load option
+  * New Game option
+-[ ] Add Load menu scene
+  * List of game loads
+-[ ] Load game from local save
+-[ ] Load game from remote authoritative server.
+  * Use jsonweb token in get param for server authorization.
