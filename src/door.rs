@@ -1,5 +1,5 @@
 use bevy::input::Input;
-use bevy::prelude::{App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, KeyCode, Mut, Plugin, Query, Res, SpriteSheetBundle, Text, TextureAtlasSprite, With};
+use bevy::prelude::{Added, App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, KeyCode, Mut, Or, Plugin, Query, Res, SpriteSheetBundle, Text, TextureAtlasSprite, With};
 use bevy_ecs_ldtk::prelude::{EntityInstance, LdtkEntity, RegisterLdtkObjects};
 use bevy_ecs_ldtk::ldtk::FieldValue;
 use bevy_rapier2d::prelude::{Collider};
@@ -65,7 +65,7 @@ impl From<EntityInstance> for Door {
 }
 
 fn door_interaction_text(
-    interactive_door_q: Query<&Door, With<Interactive>>,
+    interactive_door_q: Query<&Door, Or<(Added<Interactive>, Changed<Door>)>>,
     mut text_q: Query<&mut Text, With<InteractiveText>>,
 ) {
     for door in interactive_door_q.iter() {

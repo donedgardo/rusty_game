@@ -1,5 +1,5 @@
 use bevy::app::App;
-use bevy::prelude::{Added, Camera, Commands, Component, default, Entity, GlobalTransform, Plugin, Query, Res, SpriteBundle, Transform, Vec3, Window, Windows, With};
+use bevy::prelude::{Added, Camera, Commands, Component, CursorMoved, default, Entity, EventReader, GlobalTransform, Plugin, Query, Res, SpriteBundle, Transform, Vec3, Window, Windows, With};
 use bevy::asset::AssetServer;
 use bevy::hierarchy::BuildChildren;
 use bevy::math::{Quat, Vec2};
@@ -36,17 +36,17 @@ fn spawn_cursor_indicator(
 
 fn my_cursor_system(
     windows: Res<Windows>,
+    cursor_evr: EventReader<CursorMoved>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mut indicator_q: Query<(&mut Transform, &GlobalTransform), With<CursorIndicator>>,
 ) {
+    if cursor_evr.len() == 0 { return; }
     let (camera, camera_transform) = q_camera.single();
-
     let wnd = if let RenderTarget::Window(id) = camera.target {
         windows.get(id).unwrap()
     } else {
         windows.get_primary().unwrap()
     };
-
     if let Some(screen_pos) = wnd.cursor_position() {
         let cursor_pos = get_cursor_translation(camera, camera_transform, wnd, screen_pos);
         for (mut indicator_transform, cursor_global_transform) in indicator_q.iter_mut() {
@@ -102,6 +102,10 @@ mod indicator_cursor_test {
     #[test]
     fn indicator_looks_at_mouse() {
         let mut app = setup();
+        app.world.send_event(CursorMoved {
+            id: Default::default(),
+            position: Vec2::new(0., 50.),
+        });
         update(&mut app, 2);
         let cursor_transform = app.world
             .query_filtered::<&Transform, With<CursorIndicator>>()
@@ -110,14 +114,13 @@ mod indicator_cursor_test {
     }
 
     fn setup() -> App {
-        let windows = create_test_windows();
         let mut app = App::new();
+        let window = create_test_windows();
         app.add_plugins(LoadTestPlugins)
             .add_plugin(CameraPlugin)
             .add_plugin(CursorIndicatorPlugin)
-            .insert_resource(windows);
+            .insert_resource(window);
         let _ = app.world.spawn(Player).id();
         app
     }
-
 }
