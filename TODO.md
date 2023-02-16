@@ -4,6 +4,7 @@
 -[ ] Add menu scene
   * Load option
   * New Game option
+-[ ] Save Game Locally
 -[ ] Add Load menu scene
   * List of game loads
 -[ ] Load game from local save
