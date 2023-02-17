@@ -156,14 +156,12 @@ mod doors_test {
     #[test]
     fn it_spawns_entity_with_door() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         assert!(app.world.query::<&Door>().iter(&app.world).len() > 0);
     }
 
     #[test]
     fn door_is_open_by_default() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         let door = app.world.query::<&Door>().single(&app.world);
         assert!(door.is_open());
     }
@@ -171,7 +169,6 @@ mod doors_test {
     #[test]
     fn it_has_a_sprite_sheet() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         let door_sprite_sheet_count = app.world
             .query_filtered::<&TextureAtlasSprite, With<Door>>()
             .iter(&app.world)
@@ -182,7 +179,6 @@ mod doors_test {
     #[test]
     fn it_has_open_sprite_by_default() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         let sprite = app.world
             .query_filtered::<&TextureAtlasSprite, With<Door>>()
             .single(&app.world);
@@ -192,7 +188,6 @@ mod doors_test {
     #[test]
     fn it_has_a_sensor_collider_by_default() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         let door_with_collider_sensor_count = app.world
             .query::<(&Door, &Sensor, &Collider, &RigidBody)>()
             .iter(&app.world)
@@ -203,7 +198,6 @@ mod doors_test {
     #[test]
     fn it_has_open_sprite_after_interacting() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         interact_with_door(&mut app);
         app.update();
         let sprite = app.world
@@ -215,7 +209,6 @@ mod doors_test {
     #[test]
     fn it_doesnt_have_blocking_collider_when_open() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         let blocking_collider = get_blocking_collider(&mut app);
         assert!(blocking_collider.is_err());
     }
@@ -223,7 +216,6 @@ mod doors_test {
     #[test]
     fn it_has_blocking_collider_when_closed() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         interact_with_door(&mut app);
         app.update();
         let blocking_collider = get_blocking_collider(&mut app);
@@ -233,7 +225,6 @@ mod doors_test {
     #[test]
     fn it_doesnt_have_blocking_collider_when_reopened() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         //close
         interact_with_door(&mut app);
         app.update();
@@ -247,7 +238,6 @@ mod doors_test {
     #[test]
     fn it_interacts_on_object_when_near_and_using_input() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         move_player_to_door(&mut app);
         test_utils::update(&mut app, 2);
         app.world.send_event(KeyboardInput {
@@ -265,7 +255,6 @@ mod doors_test {
     #[test]
     fn it_add_close_text_to_player_near_door() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         move_player_to_door(&mut app);
         test_utils::update(&mut app, 3);
         let text = app.world
@@ -277,7 +266,6 @@ mod doors_test {
     #[test]
     fn it_add_open_text_to_player_near_door() {
         let mut app = setup();
-        test_utils::update(&mut app, 3);
         move_player_to_door(&mut app);
         interact_with_door(&mut app);
         test_utils::update(&mut app, 3);
@@ -333,6 +321,7 @@ mod doors_test {
             .add_plugin(LevelPlugin)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
             .add_plugin(DoorPlugin);
+        test_utils::update(&mut app, 3);
         app
     }
 }
