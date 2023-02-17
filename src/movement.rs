@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::Velocity;
+use crate::gamepad;
 use crate::gamepad::MyGamepad;
 use crate::player::Player;
 
@@ -45,26 +46,9 @@ fn handle_keyboard_input(keyboard_input: Res<Input<KeyCode>>, direction: &mut Ve
 fn handle_gamepad_input(axes: Res<Axis<GamepadAxis>>, my_gamepad: Option<Res<MyGamepad>>, direction: &mut Vec2) {
     if my_gamepad.is_none() { return; }
     let gamepad = my_gamepad.unwrap().0;
-    let axis_lx = GamepadAxis {
-        gamepad,
-        axis_type: GamepadAxisType::LeftStickX,
-    };
-    let axis_ly = GamepadAxis {
-        gamepad,
-        axis_type: GamepadAxisType::LeftStickY,
-    };
-    if let Some(y) = axes.get(axis_ly) {
-        if y != 0.00 {
-            direction.y = y;
-        }
-    }
-    if let Some(x) = axes.get(axis_lx) {
-        if x != 0.00 {
-            direction.x = x;
-        }
-    }
+    let new_direction = gamepad::get_left_axis_direction(axes, gamepad);
+    *direction = new_direction;
 }
-
 
 
 #[cfg(test)]
@@ -73,7 +57,6 @@ mod input_tests {
     use bevy_rapier2d::prelude::*;
     use bevy::time::TimePlugin;
     use bevy::input::{ButtonState, InputPlugin};
-    use bevy::input::gamepad::GamepadInfo;
     use bevy::input::keyboard::KeyboardInput;
     use bevy::prelude::GamepadAxisType::{LeftStickX, LeftStickY};
     use crate::gamepad::GamepadPlugin;
@@ -119,7 +102,7 @@ mod input_tests {
     #[test]
     fn gamepad_moves_player_up() {
         let (mut app, player_entity) = setup();
-        connect_test_gamepad(&mut app);
+        test_utils::connect_test_gamepad(&mut app);
         move_gamepad_left_axis(&mut app, 0., 1.);
         test_utils::update(&mut app, 2);
         let new_transform = get_player_transform(&app, player_entity);
@@ -129,7 +112,7 @@ mod input_tests {
     #[test]
     fn gamepad_moves_player_down() {
         let (mut app, player_entity) = setup();
-        connect_test_gamepad(&mut app);
+        test_utils::connect_test_gamepad(&mut app);
         move_gamepad_left_axis(&mut app, 0., -1.);
         test_utils::update(&mut app, 2);
         let new_transform = get_player_transform(&app, player_entity);
@@ -139,7 +122,7 @@ mod input_tests {
     #[test]
     fn gamepad_moves_player_left() {
         let (mut app, player_entity) = setup();
-        connect_test_gamepad(&mut app);
+        test_utils::connect_test_gamepad(&mut app);
         move_gamepad_left_axis(&mut app, -1., 0.);
         test_utils::update(&mut app, 2);
         let new_transform = get_player_transform(&app, player_entity);
@@ -149,7 +132,7 @@ mod input_tests {
     #[test]
     fn gamepad_moves_player_right() {
         let (mut app, player_entity) = setup();
-        connect_test_gamepad(&mut app);
+        test_utils::connect_test_gamepad(&mut app);
         move_gamepad_left_axis(&mut app, 1., 0.);
         test_utils::update(&mut app, 2);
         let new_transform = get_player_transform(&app, player_entity);
@@ -159,7 +142,7 @@ mod input_tests {
     #[test]
     fn gamepad_moves_player_at_an_angle() {
         let (mut app, player_entity) = setup();
-        connect_test_gamepad(&mut app);
+        test_utils::connect_test_gamepad(&mut app);
         move_gamepad_left_axis(&mut app, 0.7, 0.7);
         test_utils::update(&mut app, 3);
         let velocity = app.world.get::<Velocity>(player_entity).unwrap();
@@ -167,27 +150,6 @@ mod input_tests {
                    (Vec2::new(0.7, 0.7).normalize() * 100.).floor());
     }
 
-    #[test]
-    fn primary_game_pad_is_assigned_on_connect() {
-        let (mut app, _) = setup();
-        connect_test_gamepad(&mut app);
-        app.update();
-        let gamepad = app.world.get_resource::<MyGamepad>().unwrap();
-        assert_eq!(gamepad.0.id, 1);
-    }
-
-    #[test]
-    fn primary_game_pad_is_unassigned_on_disconnect() {
-        let (mut app, _) = setup();
-        connect_test_gamepad(&mut app);
-        app.update();
-        app.world.send_event(
-            GamepadEvent::new(
-                Gamepad { id: 1 },
-                GamepadEventType::Disconnected));
-        app.update();
-        assert!(app.world.get_resource::<MyGamepad>().is_none());
-    }
 
     fn setup() -> (App, Entity) {
         let mut app = App::new();
@@ -211,15 +173,6 @@ mod input_tests {
             key_code: Option::from(key),
             state: ButtonState::Pressed,
         });
-    }
-
-    fn connect_test_gamepad(app: &mut App) {
-        app.world.send_event(
-            GamepadEvent::new(
-                Gamepad { id: 1 },
-                GamepadEventType::Connected(
-                    GamepadInfo { name: "test_gamepad".to_string() }
-                )));
     }
 
     fn move_gamepad_left_axis(app: &mut App, x_pos: f32, y_pos: f32) {

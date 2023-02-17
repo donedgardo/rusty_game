@@ -52,7 +52,6 @@ pub fn handle_interactive_collisions(
 fn remove_interactive_text(interactive_text_q: &mut Query<&mut Text, With<InteractiveText>>) {
     for mut text in interactive_text_q.iter_mut() {
         text.sections[0].value = "".to_string();
-        println!("{}", text.sections[0].value);
     }
 }
 

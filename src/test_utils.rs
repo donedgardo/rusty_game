@@ -1,12 +1,13 @@
 use bevy::app::{PluginGroup, PluginGroupBuilder, ScheduleRunnerPlugin};
 use bevy::core::CorePlugin;
 use bevy::time::TimePlugin;
-use bevy::prelude::{App, HierarchyPlugin, ImagePlugin, TransformPlugin, Window, WindowPlugin, Windows};
+use bevy::prelude::{App, Gamepad, GamepadEvent, GamepadEventType, HierarchyPlugin, ImagePlugin, TransformPlugin, Window, WindowPlugin, Windows};
 use bevy::asset::AssetPlugin;
 use bevy::render::RenderPlugin;
 use bevy::core_pipeline::CorePipelinePlugin;
 use bevy::sprite::SpritePlugin;
 use bevy::math::DVec2;
+use bevy::input::gamepad::GamepadInfo;
 
 pub struct LoadTestPlugins;
 
@@ -50,6 +51,15 @@ pub fn create_test_windows() -> Windows {
     );
     windows.add(test_window);
     windows
+}
+
+pub fn connect_test_gamepad(app: &mut App) {
+    app.world.send_event(
+        GamepadEvent::new(
+            Gamepad { id: 1 },
+            GamepadEventType::Connected(
+                GamepadInfo { name: "test_gamepad".to_string() }
+            )));
 }
 
 
