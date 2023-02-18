@@ -1,6 +1,6 @@
 # TODO
 -[x] Add cursor indicator gamepad support
--[ ] Add interaction gamepad support
+-[x] Add interaction gamepad support
 -[ ] Add menu scene
   * Load option
   * New Game option

@@ -224,14 +224,12 @@ mod level_tests {
     #[test]
     fn did_spawn_test_level() {
         let mut app = setup();
-        update(&mut app, 3);
         assert_eq!(app.world.query::<&Ground>().iter(&app.world).len(), 22 * 22);
     }
 
     #[test]
     fn dis_spawn_colliders_for_walls() {
         let mut app = setup();
-        update(&mut app, 3);
         assert_eq!(app.world.query::<&Collider>().iter(&app.world).len(), 4);
     }
 
@@ -240,6 +238,7 @@ mod level_tests {
         app
             .add_plugins(LoadTestPlugins)
             .add_plugin(LevelPlugin);
+        update(&mut app, 3);
         app
     }
 }
