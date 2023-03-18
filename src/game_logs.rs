@@ -222,14 +222,12 @@ mod log_test {
     }
 
     fn setup() -> App {
-        let windows = create_test_windows();
         let mut app = App::new();
         app.add_plugins(LoadTestPlugins);
         app.add_plugin(TextPlugin::default());
         app.add_plugin(UiPlugin::default());
         app.add_plugin(InputPlugin);
         app.add_plugin(UIPlugin);
-        app.insert_resource(windows);
         app
     }
 }

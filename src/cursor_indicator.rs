@@ -1,9 +1,11 @@
 use bevy::app::App;
-use bevy::prelude::{Added, Axis, Camera, Commands, Component, CursorMoved, default, Entity, EventReader, Gamepad, GamepadAxis, GlobalTransform, Plugin, Query, Res, SpriteBundle, Transform, Vec3, Window, Windows, With};
+use bevy::prelude::{Added, Axis, Camera, Commands, Component, CursorMoved, default, Entity,
+                    EventReader, GamepadAxis, GlobalTransform, Plugin, Query, Res, SpriteBundle,
+                    Transform, Vec3, Window, With};
 use bevy::asset::AssetServer;
 use bevy::hierarchy::BuildChildren;
 use bevy::math::{Quat, Vec2};
-use bevy::render::camera::RenderTarget;
+use bevy::window::PrimaryWindow;
 use crate::gamepad;
 use crate::gamepad::MyGamepad;
 use crate::player::Player;
@@ -52,21 +54,19 @@ fn my_gamepad_system(
 }
 
 fn my_cursor_system(
-    windows: Res<Windows>,
+    windows_query: Query<&Window, With<PrimaryWindow>>,
     cursor_evr: EventReader<CursorMoved>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mut indicator_q: Query<(&mut Transform, &GlobalTransform), With<CursorIndicator>>,
 ) {
     if cursor_evr.len() == 0 { return; }
     let (camera, camera_transform) = q_camera.single();
-    let wnd = if let RenderTarget::Window(id) = camera.target {
-        windows.get(id).unwrap()
-    } else {
-        windows.get_primary().unwrap()
-    };
+    let wnd = windows_query.single();
     if let Some(screen_pos) = wnd.cursor_position() {
         let cursor_pos = get_cursor_translation(camera, camera_transform, wnd, screen_pos);
-        for (mut indicator_transform, cursor_global_transform) in indicator_q.iter_mut() {
+        for (
+            mut indicator_transform, cursor_global_transform
+        ) in indicator_q.iter_mut() {
             let player_pos = cursor_global_transform.translation().truncate();
             let rotation = get_rotation_from_to(player_pos, cursor_pos);
             indicator_transform.rotation = rotation;
@@ -97,7 +97,7 @@ mod indicator_cursor_test {
     use crate::camera::CameraPlugin;
     use crate::gamepad::GamepadPlugin;
     use crate::player::Player;
-    use crate::test_utils::{connect_test_gamepad, create_test_windows, LoadTestPlugins, update};
+    use crate::test_utils::{connect_test_gamepad, LoadTestPlugins, update};
 
     #[test]
     fn it_spawns_indicator_as_child_of_player() {
@@ -115,6 +115,7 @@ mod indicator_cursor_test {
             .get_single(&app.world);
         assert!(sprite.is_ok());
     }
+
     #[test]
     fn indicator_doesnt_looks_at_mouse_when_unmoved() {
         let mut app = setup();
@@ -125,13 +126,26 @@ mod indicator_cursor_test {
     #[test]
     fn indicator_looks_at_mouse_when_moved() {
         let mut app = setup();
-        app.world.send_event(CursorMoved {
-            id: Default::default(),
-            position: Vec2::new(0., 50.),
-        });
+        set_cursor_position(&mut app);
         update(&mut app, 1);
         let cursor_transform = get_cursor_transform(&mut app);
         assert_eq!(cursor_transform.rotation.xyz(), Vec3::new(0., 0., 1.));
+    }
+
+    fn set_cursor_position(mut app: &mut App) {
+        let (entity, mut window) = get_window(&mut app);
+        let cursor_pos = Vec2::new(0., window.resolution.height() / 2.);
+        window.set_cursor_position(Some(cursor_pos));
+        app.world.send_event(CursorMoved {
+            window: entity,
+            position: cursor_pos,
+        });
+    }
+
+    fn get_window(app: &mut App) -> (Entity, Mut<Window>) {
+        let (entity, window) = app.world
+            .query_filtered::<(Entity, &mut Window), With<PrimaryWindow>>().single_mut(&mut app.world);
+        (entity, window)
     }
 
     #[test]
@@ -150,10 +164,7 @@ mod indicator_cursor_test {
         let mut app = setup();
         connect_test_gamepad(&mut app);
         update(&mut app, 1);
-        app.world.send_event(CursorMoved {
-            id: Default::default(),
-            position: Vec2::new(0., 50.),
-        });
+        set_cursor_position(&mut app);
         update(&mut app, 1);
         move_gamepad_right_axis(&mut app, 0., 0.);
         update(&mut app, 1);
@@ -184,13 +195,11 @@ mod indicator_cursor_test {
 
     fn setup() -> App {
         let mut app = App::new();
-        let window = create_test_windows();
         app.add_plugins(LoadTestPlugins)
             .add_plugin(InputPlugin)
             .add_plugin(CameraPlugin)
             .add_plugin(GamepadPlugin)
-            .add_plugin(CursorIndicatorPlugin)
-            .insert_resource(window);
+            .add_plugin(CursorIndicatorPlugin);
         app.world.spawn(Player);
         app.update();
         app

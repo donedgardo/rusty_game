@@ -1,6 +1,6 @@
 use bevy::input::Input;
 use bevy::prelude::{Added, App, BuildChildren, Bundle, Changed, Children, Commands, Component, Entity, GamepadButton, GamepadButtonType, KeyCode, Mut, Or, Plugin, Query, Res, SpriteSheetBundle, Text, TextureAtlasSprite, With};
-use bevy_ecs_ldtk::prelude::{EntityInstance, LdtkEntity, RegisterLdtkObjects};
+use bevy_ecs_ldtk::prelude::{EntityInstance, LdtkEntity, LdtkEntityAppExt};
 use bevy_ecs_ldtk::ldtk::FieldValue;
 use bevy_rapier2d::prelude::{Collider};
 use crate::gamepad::MyGamepad;
@@ -48,8 +48,8 @@ impl Interaction for Door {
     }
 }
 
-impl From<EntityInstance> for Door {
-    fn from(value: EntityInstance) -> Self {
+impl From<&EntityInstance> for Door {
+    fn from(value: &EntityInstance) -> Self {
         let field_instances = &value.field_instances;
         let default_door = Door { is_open: false };
         match field_instances.iter()
@@ -157,10 +157,10 @@ fn remove_blocking_collider(commands: &mut Commands, entity: Entity, children_r:
 mod doors_test {
     use bevy::ecs::query::QueryEntityError;
     use bevy::input::{ButtonState, InputPlugin};
-    use bevy::input::gamepad::GamepadEventRaw;
+    use bevy::input::gamepad::GamepadButtonChangedEvent;
     use bevy::input::keyboard::KeyboardInput;
     use bevy::math::Vec3;
-    use bevy::prelude::{App, Children, Entity, Gamepad, GamepadButtonType, GamepadEventType, KeyCode,
+    use bevy::prelude::{App, Children, Entity, Gamepad, GamepadButtonType, KeyCode,
                         Text, TextureAtlasSprite, Transform, With, Without};
     use bevy_rapier2d::prelude::*;
     use crate::door::{Door, DoorPlugin};
@@ -335,9 +335,10 @@ mod doors_test {
 
     fn press_interact_button(mut app: &mut App) {
         app.world.send_event(
-            GamepadEventRaw::new(
+            GamepadButtonChangedEvent::new(
                 Gamepad { id: 1 },
-                GamepadEventType::ButtonChanged(GamepadButtonType::South, 1.0),
+                GamepadButtonType::South,
+                1.0
             )
         );
         test_utils::update(&mut app, 1);

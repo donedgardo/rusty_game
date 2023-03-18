@@ -26,10 +26,10 @@ mod gamepad;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
+            primary_window: Option::from(Window {
                 fit_canvas_to_parent: true,
                 ..default()
-            },
+            }),
             ..default()
         }).set(ImagePlugin::default_nearest()))
         .add_plugin(LogDiagnosticsPlugin::default())

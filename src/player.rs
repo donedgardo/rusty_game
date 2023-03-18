@@ -67,7 +67,7 @@ fn add_interactive_text(
             parent.spawn((
                 Text2dBundle {
                     text: Text::from_section("", text_style.clone())
-                        .with_alignment(TextAlignment::CENTER),
+                        .with_alignment(TextAlignment::Center),
                     transform: Transform::from_xyz(0., 20., 0.).with_scale(Vec3::splat(0.5)),
                     ..default()
                 },

@@ -12,8 +12,8 @@ pub struct CharacterPhysicsBundle {
     pub rotation_constraints: LockedAxes,
 }
 
-impl From<EntityInstance> for CharacterPhysicsBundle {
-    fn from(entity_instance: EntityInstance) -> CharacterPhysicsBundle {
+impl From<&EntityInstance> for CharacterPhysicsBundle {
+    fn from(entity_instance: &EntityInstance) -> CharacterPhysicsBundle {
         let rotation_constraints = LockedAxes::ROTATION_LOCKED;
         match entity_instance.identifier.as_ref() {
             "Player" => CharacterPhysicsBundle {
@@ -36,8 +36,8 @@ pub struct ObjectPhysicsBundle {
     pub events: ActiveEvents,
 }
 
-impl From<EntityInstance> for ObjectPhysicsBundle {
-    fn from(entity_instance: EntityInstance) -> ObjectPhysicsBundle {
+impl From<&EntityInstance> for ObjectPhysicsBundle {
+    fn from(entity_instance: &EntityInstance) -> ObjectPhysicsBundle {
         match entity_instance.identifier.as_ref() {
             "Door" => ObjectPhysicsBundle {
                 collider: Collider::cuboid(16., 16.),

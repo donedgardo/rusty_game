@@ -1,5 +1,6 @@
-use bevy::prelude::{App, Commands, EventReader, Gamepad, GamepadAxis, GamepadAxisType, GamepadEvent, GamepadEventType, Plugin, Res, Resource};
+use bevy::prelude::{App, Commands, EventReader, Gamepad, GamepadAxis, GamepadAxisType, Plugin, Res, Resource};
 use bevy::input::Axis;
+use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent};
 use bevy::math::Vec2;
 
 pub struct GamepadPlugin;
@@ -16,24 +17,23 @@ pub struct MyGamepad(pub Gamepad);
 pub fn gamepad_detection(
     mut commands: Commands,
     my_gamepad: Option<Res<MyGamepad>>,
-    mut gamepad_evr: EventReader<GamepadEvent>,
+    mut gamepad_evr: EventReader<GamepadConnectionEvent>,
 ) {
     for ev in gamepad_evr.iter() {
         let id = ev.gamepad;
-        match &ev.event_type {
-            GamepadEventType::Connected(_) => {
+        match &ev.connection {
+            GamepadConnection::Connected(_) => {
                 if my_gamepad.is_none() {
                     commands.insert_resource(MyGamepad(id));
                 }
             }
-            GamepadEventType::Disconnected => {
+            GamepadConnection::Disconnected => {
                 if let Some(MyGamepad(old_id)) = my_gamepad.as_deref() {
                     if *old_id == id {
                         commands.remove_resource::<MyGamepad>();
                     }
                 }
             }
-            _ => {}
         }
     }
 }
@@ -76,8 +76,9 @@ fn get_axis_direction(axes: Res<Axis<GamepadAxis>>, axis_rx: GamepadAxis, axis_r
 
 #[cfg(test)]
 mod gamepad_test {
+    use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent};
     use bevy::input::InputPlugin;
-    use bevy::prelude::{App, Gamepad, GamepadEvent, GamepadEventType};
+    use bevy::prelude::{App, Gamepad};
     use crate::gamepad::{GamepadPlugin, MyGamepad};
     use crate::test_utils::connect_test_gamepad;
 
@@ -96,9 +97,9 @@ mod gamepad_test {
         connect_test_gamepad(&mut app);
         app.update();
         app.world.send_event(
-            GamepadEvent::new(
+            GamepadConnectionEvent::new(
                 Gamepad { id: 1 },
-                GamepadEventType::Disconnected));
+                GamepadConnection::Disconnected));
         app.update();
         assert!(app.world.get_resource::<MyGamepad>().is_none());
     }
