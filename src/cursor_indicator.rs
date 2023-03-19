@@ -132,22 +132,6 @@ mod indicator_cursor_test {
         assert_eq!(cursor_transform.rotation.xyz(), Vec3::new(0., 0., 1.));
     }
 
-    fn set_cursor_position(mut app: &mut App) {
-        let (entity, mut window) = get_window(&mut app);
-        let cursor_pos = Vec2::new(0., window.resolution.height() / 2.);
-        window.set_cursor_position(Some(cursor_pos));
-        app.world.send_event(CursorMoved {
-            window: entity,
-            position: cursor_pos,
-        });
-    }
-
-    fn get_window(app: &mut App) -> (Entity, Mut<Window>) {
-        let (entity, window) = app.world
-            .query_filtered::<(Entity, &mut Window), With<PrimaryWindow>>().single_mut(&mut app.world);
-        (entity, window)
-    }
-
     #[test]
     fn it_looks_towards_right_joystick_direction() {
         let mut app = setup();
@@ -191,6 +175,22 @@ mod indicator_cursor_test {
         app.world
             .query_filtered::<&Transform, With<CursorIndicator>>()
             .single(&app.world)
+    }
+
+    fn set_cursor_position(mut app: &mut App) {
+        let (entity, mut window) = get_window(&mut app);
+        let cursor_pos = Vec2::new(0., window.resolution.height() / 2.);
+        window.set_cursor_position(Some(cursor_pos));
+        app.world.send_event(CursorMoved {
+            window: entity,
+            position: cursor_pos,
+        });
+    }
+
+    fn get_window(app: &mut App) -> (Entity, Mut<Window>) {
+        let (entity, window) = app.world
+            .query_filtered::<(Entity, &mut Window), With<PrimaryWindow>>().single_mut(&mut app.world);
+        (entity, window)
     }
 
     fn setup() -> App {

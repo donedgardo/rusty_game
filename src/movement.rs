@@ -22,10 +22,10 @@ fn movement_input(
     if velocity_res.is_err() { return; }
     let mut velocity = velocity_res.unwrap();
     let mut direction = Vec2::default();
-    let speed = 100.0;
+    let max_speed = 70.0;
     handle_gamepad_input(axes, my_gamepad, &mut direction);
     handle_keyboard_input(keyboard_input, &mut direction);
-    velocity.linvel = direction.normalize_or_zero() * speed;
+    velocity.linvel = direction.normalize_or_zero() * max_speed;
 }
 
 fn handle_keyboard_input(keyboard_input: Res<Input<KeyCode>>, direction: &mut Vec2) {

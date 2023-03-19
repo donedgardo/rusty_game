@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::asset::AssetServer;
-use bevy::ecs::query::QueryIter;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 
 pub struct UIPlugin;
@@ -46,8 +45,6 @@ fn setup_ui(mut commands: Commands) {
                 NodeBundle {
                     style: Style {
                         flex_direction: FlexDirection::Column,
-                        flex_grow: 1.0,
-                        max_size: Size::UNDEFINED,
                         ..default()
                     },
                     ..default()
@@ -79,7 +76,6 @@ fn add_game_logs(
                         color: Color::WHITE,
                     },
                 ).with_style(Style {
-                    flex_shrink: 0.,
                     size: Size::new(
                         Val::Px(node.size().x),
                         Val::Undefined,
@@ -94,15 +90,15 @@ fn add_game_logs(
 
 fn scroll_to_bottom_on_new_log(
     log_node_changed_query: Query<Entity, (With<GameLog>, Changed<Node>)>,
-    mut query_list: Query<(&mut Style, &Node, &mut ScrollingList)>,
-    logs_query: Query<&Node, With<GameLog>>,
+    mut query_list: Query<(&mut Style, &Node, &Parent, &mut ScrollingList)>,
+    logs_query: Query<&Node>,
 ) {
     for _ in log_node_changed_query.iter() {
-        let logs_height = get_game_logs_height(logs_query.iter());
         let query_list_result = query_list.get_single_mut();
         if query_list_result.is_err() { continue; }
-        let (mut style, node, mut scroll) = query_list_result.unwrap();
-        let panel_height = node.size().y;
+        let (mut style, list_node, parent, mut scroll) = query_list_result.unwrap();
+        let logs_height = list_node.size().y;
+        let panel_height = logs_query.get(parent.get()).unwrap().size().y;
         scroll.position = panel_height - logs_height;
         style.position.top = Val::Px(panel_height - logs_height);
     }
@@ -111,13 +107,13 @@ fn scroll_to_bottom_on_new_log(
 
 fn scroll_logs_on_mouse_scroll(
     mut mouse_wheel_events: EventReader<MouseWheel>,
-    mut query_list: Query<(&mut ScrollingList, &mut Style, &Node)>,
-    logs_query: Query<&Node, With<GameLog>>,
+    mut query_list: Query<(&mut ScrollingList, &mut Style, &Parent, &Node)>,
+    logs_query: Query<&Node>,
 ) {
     for mouse_wheel_event in mouse_wheel_events.iter() {
-        for (mut scrolling_list, mut style, uinode) in &mut query_list {
-            let logs_height = get_game_logs_height(logs_query.iter());
-            let panel_height = uinode.size().y;
+        for (mut scrolling_list, mut style, parent, list_node) in &mut query_list {
+            let logs_height = list_node.size().y;
+            let panel_height = logs_query.get(parent.get()).unwrap().size().y;
             let max_scroll = (logs_height - panel_height).max(0.);
             let dy = match mouse_wheel_event.unit {
                 MouseScrollUnit::Line => mouse_wheel_event.y * 20.,
@@ -129,14 +125,6 @@ fn scroll_logs_on_mouse_scroll(
         }
     }
 }
-
-fn get_game_logs_height(logs_iter: QueryIter<&Node, With<GameLog>>) -> f32 {
-    let logs_height: f32 = logs_iter
-        .map(|node| node.size().y)
-        .sum();
-    logs_height
-}
-
 
 #[derive(Component, Default)]
 struct ScrollingList {
@@ -152,6 +140,7 @@ pub struct GameLogEvent(String);
 mod log_test {
     use bevy::input::InputPlugin;
     use bevy::text::TextPlugin;
+    use bevy::prelude::*;
     use bevy::ui::UiPlugin;
     use super::*;
     use crate::test_utils::*;
@@ -171,39 +160,32 @@ mod log_test {
         let mut app = setup();
         app.world.send_event(GameLogEvent("Hello World!Long LOng Long \n Long \n Long \n LOng\n very long! \n Very Long \n Very LOng \n Very Long".to_string()));
         update(&mut app, 3);
-        let original_top = get_scroll_list_top(&mut app);
-        scroll_mouse(&mut app, 1.);
+        let top_before_mouse_scroll = get_scroll_list_top(&mut app);
+        scroll_mouse_wheel(&mut app, 1.);
         update(&mut app, 2);
         let top_after_mouse_scroll = get_scroll_list_top(&mut app);
-        let expected_top = original_top.try_add(Val::Px(20.)).unwrap();
+        let expected_top = top_before_mouse_scroll.try_add(Val::Px(20.)).unwrap();
         assert_eq!(top_after_mouse_scroll, expected_top);
-        scroll_mouse(&mut app, -1.);
+        scroll_mouse_wheel(&mut app, -1.);
         update(&mut app, 2);
         let top_after_scrolling_back = get_scroll_list_top(&mut app);
-        assert_eq!(original_top, top_after_scrolling_back);
+        assert_eq!(top_before_mouse_scroll, top_after_scrolling_back);
     }
 
     #[test]
     fn it_scrolls_to_bottom_on_log_event() {
         let mut app = setup();
         app.world.send_event(GameLogEvent("Hello World!Long LOng Long \n Long \n Long \n LOng\n very long! \n Very Long \n Very LOng \n Very Long".to_string()));
-        app.world.send_event(GameLogEvent("Hello World!Long LOng Long \n Long \n Long \n LOng\n very long! \n Very Long \n Very LOng \n Very Long".to_string()));
         update(&mut app, 3);
-        let item_height: f32 = get_logs_height(&mut app);
-        let (node, style, scroll) = app.world
-            .query::<(&Node, &Style, &ScrollingList)>()
+        let mut logs_query = app.world.query::<&Node>();
+        let (node, style, parent, scroll) = app.world
+            .query::<(&Node, &Style, &Parent, &ScrollingList)>()
             .single(&app.world);
-        let panel_height = node.size().y;
-        let expected_top_value = item_height - panel_height;
+        let logs_height: f32 = node.size().y;
+        let panel_height = logs_query.get(&app.world, parent.get()).unwrap().size().y;
+        let expected_top_value = logs_height - panel_height;
         assert_eq!(style.position.top, Val::Px(-expected_top_value));
         assert_eq!(scroll.position, -expected_top_value);
-    }
-
-    fn get_logs_height(app: &mut App) -> f32 {
-        app.world.query_filtered::<&Node, With<GameLog>>()
-            .iter(&app.world)
-            .map(|node| node.size().y)
-            .sum()
     }
 
     fn get_scroll_list_top(app: &mut App) -> Val {
@@ -213,7 +195,7 @@ mod log_test {
             .top
     }
 
-    fn scroll_mouse(app: &mut App, y: f32) {
+    fn scroll_mouse_wheel(app: &mut App, y: f32) {
         app.world.send_event(MouseWheel {
             unit: MouseScrollUnit::Line,
             x: 0.0,
@@ -231,3 +213,4 @@ mod log_test {
         app
     }
 }
+

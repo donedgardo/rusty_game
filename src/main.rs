@@ -26,15 +26,10 @@ mod gamepad;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Option::from(Window {
-                fit_canvas_to_parent: true,
-                ..default()
-            }),
+            primary_window: Option::from(camera::get_default_window()),
             ..default()
         }).set(ImagePlugin::default_nearest()))
         .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        //.add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(LevelPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(CameraPlugin)
@@ -45,5 +40,7 @@ fn main() {
         .add_plugin(UIPlugin)
         .add_plugin(DoorPlugin)
         .add_plugin(InteractionPlugin)
+        .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .run();
 }
