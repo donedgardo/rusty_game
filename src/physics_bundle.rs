@@ -43,7 +43,7 @@ impl From<&EntityInstance> for ObjectPhysicsBundle {
                 collider: Collider::cuboid(16., 16.),
                 rigid_body: RigidBody::Fixed,
                 sensor: Sensor,
-                events: ActiveEvents::COLLISION_EVENTS
+                events: ActiveEvents::COLLISION_EVENTS,
             },
             _ => ObjectPhysicsBundle::default(),
         }

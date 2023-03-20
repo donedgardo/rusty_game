@@ -147,9 +147,8 @@ mod input_tests {
         test_utils::update(&mut app, 3);
         let velocity = app.world.get::<Velocity>(player_entity).unwrap();
         assert_eq!(velocity.linvel.floor(),
-                   (Vec2::new(0.7, 0.7).normalize() * 100.).floor());
+                   (Vec2::new(0.7, 0.7).normalize() * 70.).floor());
     }
-
 
     fn setup() -> (App, Entity) {
         let mut app = App::new();

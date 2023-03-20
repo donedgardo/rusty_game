@@ -43,6 +43,7 @@ pub fn connect_test_gamepad(app: &mut App) {
             GamepadConnection::Connected(
                 GamepadInfo { name: "test_gamepad".to_string() }
             )));
+    app.update();
 }
 
 
