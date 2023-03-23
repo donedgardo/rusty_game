@@ -163,6 +163,7 @@ mod player_tests {
             .add_plugins(LoadTestPlugins)
             .add_plugin(LevelPlugin)
             .add_plugin(PlayerPlugin)
+            .insert_resource(LevelSelection::Index(0))
             .add_plugin(CameraPlugin);
         app
     }

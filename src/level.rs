@@ -217,6 +217,7 @@ pub fn spawn_wall_collision(
 #[cfg(test)]
 mod level_tests {
     use bevy::prelude::*;
+    use bevy_ecs_ldtk::LevelSelection;
     use bevy_rapier2d::prelude::Collider;
     use crate::level::{Ground, LevelPlugin};
     use crate::test_utils::{update, LoadTestPlugins};
@@ -237,7 +238,8 @@ mod level_tests {
         let mut app = App::new();
         app
             .add_plugins(LoadTestPlugins)
-            .add_plugin(LevelPlugin);
+            .add_plugin(LevelPlugin)
+            .insert_resource(LevelSelection::Index(0));
         update(&mut app, 3);
         app
     }

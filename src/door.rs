@@ -162,6 +162,7 @@ mod doors_test {
     use bevy::math::Vec3;
     use bevy::prelude::{App, Children, Entity, Gamepad, GamepadButtonType, KeyCode,
                         Text, TextureAtlasSprite, Transform, With, Without};
+    use bevy_ecs_ldtk::LevelSelection;
     use bevy_rapier2d::prelude::*;
     use crate::door::{Door, DoorPlugin};
     use crate::gamepad::GamepadPlugin;
@@ -369,7 +370,9 @@ mod doors_test {
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
             .add_plugin(LevelPlugin)
             .add_plugin(PlayerPlugin)
-            .add_plugin(DoorPlugin);
+            .add_plugin(DoorPlugin)
+            .insert_resource(LevelSelection::Index(0));
+
         test_utils::update(&mut app, 3);
         app
     }
