@@ -59,7 +59,7 @@ fn my_cursor_system(
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mut indicator_q: Query<(&mut Transform, &GlobalTransform), With<CursorIndicator>>,
 ) {
-    if cursor_evr.len() == 0 { return; }
+    if cursor_evr.len() == 0 || q_camera.is_empty() { return; }
     let (camera, camera_transform) = q_camera.single();
     let wnd = windows_query.single();
     if let Some(screen_pos) = wnd.cursor_position() {

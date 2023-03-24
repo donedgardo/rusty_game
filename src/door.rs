@@ -140,7 +140,7 @@ fn set_open_door_sprite(sprite: &mut Mut<TextureAtlasSprite>) {
 
 fn add_blocking_collider(commands: &mut Commands, entity: Entity) {
     commands.entity(entity).with_children(|parent| {
-        parent.spawn(Collider::cuboid(3.0, 1.0));
+        parent.spawn(Collider::cuboid(16.0, 16.0));
     });
 }
 
