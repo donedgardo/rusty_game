@@ -3,13 +3,25 @@ use bevy_rapier2d::dynamics::{GravityScale, LockedAxes, RigidBody, Velocity};
 use bevy_ecs_ldtk::EntityInstance;
 use bevy_rapier2d::prelude::{ActiveEvents, Collider, Sensor};
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub struct CharacterPhysicsBundle {
     pub rigid_body: RigidBody,
     pub gravity: GravityScale,
     pub velocity: Velocity,
     pub collider: Collider,
     pub rotation_constraints: LockedAxes,
+}
+
+impl Default for CharacterPhysicsBundle {
+    fn default() -> Self {
+        Self {
+            rigid_body: Default::default(),
+            gravity: GravityScale(0.),
+            velocity: Default::default(),
+            collider: Default::default(),
+            rotation_constraints: Default::default(),
+        }
+    }
 }
 
 impl From<&EntityInstance> for CharacterPhysicsBundle {

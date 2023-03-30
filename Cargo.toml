@@ -3,6 +3,9 @@ name = "onyx"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+debug-mode = []
+
 [dependencies]
 bevy = { version = "0.10.0" }
 bevy_rapier2d = { version = "0.21.0", features = ["debug-render-2d", "wasm-bindgen"] }
@@ -10,6 +13,7 @@ bevy_ecs_ldtk = { git = "https://github.com/Trouv/bevy_ecs_ldtk.git", branch = "
 bevy_ggrs = { git = "https://github.com/johanhelsing/bevy_ggrs.git", branch = "bevy-0.10-refactor" }
 ggrs = { git = "https://github.com/gschup/ggrs.git", features = ["sync-send"] }
 bytemuck = "1.13.1"
+bevy-inspector-egui = "0.18.1"
 
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"
